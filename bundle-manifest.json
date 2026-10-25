@@ -1,18 +1,22 @@
 {
   "schema_version": 1,
-  "created_at": "2026-10-25T06:48:06.295876+00:00",
+  "created_at": "2026-10-25T07:05:26.527462+00:00",
   "files": [
     {
       "path": ".gitignore",
-      "sha256": "ef3144fe02cafc4711bbf8c784f9767099a993fe30d6bdc42cf46666a783e621"
+      "sha256": "5d511476a1ea9c3f9fb08c2e3e97aae3db6375c58e79350e72d8d60f17514556"
+    },
+    {
+      "path": "100问预览.html",
+      "sha256": "2314cc4eb97fabe250c1e71257edb80b453db914592bcb8b747d1dd9cf4b9e98"
     },
     {
       "path": "AGENT.md",
-      "sha256": "38ee781c6302b183cb12182b571163739fac157ae81610544fd87313975ca0d3"
+      "sha256": "e1b8f565a7922231c9146d6e30ee7cb953540dc40dae33ec681b3be8c4132a69"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "b7dace95ce4817c58a72d58c1968b9ae61352b3635467054b1dce3416901a431"
+      "sha256": "449459a20dc2cfcc5ee651406c6480d3360144807659214158fc5a4a5db927ab"
     },
     {
       "path": "assets/reviewer.html",
@@ -25,6 +29,10 @@
     {
       "path": "config/style.json",
       "sha256": "34b787da8ae0147935f5beee91bb9607ca37129055044ea95d7b11891304cb61"
+    },
+    {
+      "path": "evaluation/100问.md",
+      "sha256": "5352ac6d346b8feea2931799fff1a8ec32b3cc09133ab8980f0dbba39e97182f"
     },
     {
       "path": "evaluation/questions.jsonl",
@@ -72,7 +80,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "1c13fb3af26e06859342974eb9b65e72a752315bed16d9db9e8ec278f2807a9f"
+      "sha256": "b4b058e3a0932e53ebf87db1110b498e1ee650331f19a9642c93b81b7f445b05"
     },
     {
       "path": "references/一致性对照.md",
@@ -80,7 +88,7 @@
     },
     {
       "path": "references/交付验证.md",
-      "sha256": "80a6800efdeff30610342eb4402cf91de27f9e3d6afd72e5239e7754d1e95cb2"
+      "sha256": "893c9036a62507e199af492303965a733b47f5fe80e676166d754b69fc9706e8"
     },
     {
       "path": "references/人工审核流程.md",
@@ -96,7 +104,7 @@
     },
     {
       "path": "references/装配与回填.md",
-      "sha256": "8e006bd755390af2147a89d7107e28276f924fc3b4afcb52ebd397b88d1dd33c"
+      "sha256": "81ef54634e8cec5028cf458c4fcc53310b6146208a0f2f5aec4a0acd466183d6"
     },
     {
       "path": "runtime/quality.mjs",
@@ -104,11 +112,11 @@
     },
     {
       "path": "scripts/build_bundle.py",
-      "sha256": "e22f4ea3efe7cb333c7da2540b888b30c10bc118b62ef059a5d44c5a78a3e9cc"
+      "sha256": "7259c61ceeebd2e7cf931f368557deb2be0ec08564c9b1e1ee2eb1f6aa59690f"
     },
     {
       "path": "scripts/deai.py",
-      "sha256": "60fad7cf7f97732517aa7dadab7b3c22d71c4dac9287063fec9e14fb49ad8b67"
+      "sha256": "56ae672b7676805f8be71c1876c667554da413c11e4bde6704af8ecbfd004259"
     },
     {
       "path": "scripts/observe.mjs",
@@ -124,16 +132,17 @@
     },
     {
       "path": "scripts/test_workflow.py",
-      "sha256": "ad8451fdfb596dd4ba205831d41b26386bfbf27e7475363a19b362c64e56e395"
+      "sha256": "2a114348ee273d8028ce2f8bb4576d5ce5756baab3d7af3fb336ab0fd816111d"
     },
     {
       "path": "SKILL.md",
-      "sha256": "ac1a987e377aa188d10361c510cce526af80f9e320030c3310ecf9078874cf9d"
+      "sha256": "1c772a207114519342d832980de81a581091b83e7bebea05939eb2753882551b"
     },
     {
       "path": "开始使用.md",
-      "sha256": "4b57406bf1dd37ad1a0cb7f43db40c76183d865195585f50b3493cc1712d861c"
+      "sha256": "55e641b80fd9ef29ceb5c61c9b7c906e48471b8ee30d8a2fa7436cd38d363897"
     }
   ],
-  "mutable_evidence": "runs are checked by each run's hashes; browser review copies are not static source"
+  "answers_published": false,
+  "mutable_evidence": "仓库只发布问题，不发布任何已采集回答；本机 runs/ 仅在存在时由 verify 按各运行哈希核对"
 }

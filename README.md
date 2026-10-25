@@ -4,6 +4,20 @@
 
 减少客服套话、空泛复述、固定起手和机械接梗，保留原有性格、事实、工具能力与权限边界。不要求伪装真人，也不宣称能通过某个检测器。
 
+## 本仓库包含什么
+
+| 内容 | 是否包含 |
+| --- | --- |
+| 一百个问题与审核考点 | **包含** |
+| 表达规则内核、装配与回填工具 | **包含** |
+| 来源证据与一致性对照 | **包含** |
+| 作者在本地采到的模型回答 | **不包含** |
+| 作者的审核结论、回填示例 | **不包含** |
+
+**只发问题是有意的。** 回答由特定模型、特定人设、特定温度生成：把它放进包里，新用户会拿别人的 bot 的回答当基准，也可能把作者本地的对话带出去。所以本包只提供固定输入，回答必须在你自己的目标上采集。
+
+`runs/` 已加入 `.gitignore`，本机采集结果与审核导出不会随包分发。想先看题可以打开 [100问预览.html](100问预览.html)（只含问题，不能导出审核），或读 [evaluation/100问.md](evaluation/100问.md)。
+
 ## 30 秒开始
 
 **只需要聊天窗口**：把 [AGENT.md](AGENT.md) 全文贴进去，然后说「帮我接入我的 bot」。它会先问清目标，再给步骤。
@@ -60,6 +74,27 @@ flowchart LR
 2. **明确请求优先**：私聊、被 `@`、正文点名的请求，不因为"不想像客服"而被敷衍或沉默。风格偏好永远低于用户明确要求。
 3. **质检失败放行**：风格检查报错时只告警、不阻断聊天。宁可放过一句套话，也不让整段对话卡死。
 
+### 人设优先：只补怎么说，不改是谁
+
+本包带来的是一份**表达层**，不是新角色。目标已有的设定优先于本包任何条目：
+
+| 发生冲突的对象 | 以谁为准 |
+| --- | --- |
+| 原有性格、说话习惯、口癖 | **原有设定** |
+| 原有世界观、背景、人物关系 | **原有设定** |
+| 原有能力边界、权限、工具用法 | **原有设定** |
+| 原有禁区、安全规则、合规要求 | **原有设定** |
+| 本包的表达偏好（长度、起手、收尾、少总结） | 仅在不与以上冲突时生效 |
+
+落到操作上，默认的 `marker` 与 `json-path` 都是**追加**：原文一字不动，只在末尾维护一个 `deai:begin … deai:end` 块；重复安装只替换这个块，不会叠加，也不会重排原内容。安装结果会给出这两个字段，可以直接核对：
+
+- `preserved_original_chars`：原内容保留的字符数
+- `persona_policy`：`preserve-existing`（保留）或 `replace-all`（整份丢弃）
+
+`--mode replace` 是唯一会丢弃原设定的模式，结果会标成 `replace-all` 并带 `warning`，**只有在用户明确说"不用管原设定"时才可用**。
+
+装配前必须先读一遍目标的人设，并在回答里列出"将保留哪些设定、只追加什么"。若本包某条与目标人设冲突（例如目标是冷淡简短，而某条示例偏热情），跳过该条，不要反过来改目标设定。
+
 ### 一百问为什么必须由人签认
 
 判断"表达是否改善"需要三样东西同时成立：固定输入、可比样本、可信判据。
@@ -111,7 +146,7 @@ flowchart LR
 | 问询 | 候选为 0 / 多个、缺提示入口、缺接口、要写文件权限时问用户 | 读 `probe/questions-for-user.md` |
 | 装配 | 只加一份表达层，标记块幂等、自动备份、可回滚 | `python scripts/deai.py install --target <提示文件> --dry-run` |
 | 提问 | 用**装配后的完整提示**向目标提一百问 | `python scripts/deai.py collect --system-file <emit 文件>` |
-| 人工审核 | 由人逐条通过 / 纠正 / 拒绝并签认 | 打开 `人工审核.html` |
+| 人工审核 | 由人逐条通过 / 纠正 / 拒绝并签认 | 打开采集后生成的 `runs/<时间>/人工审核.html` |
 | 回填 | 编译人工结论并写回目标 | `python scripts/deai.py apply --run <runs/...> --review <human-review.json> --out compiled/v1 --target <提示文件>` |
 | 复测 | 用回填后的表达层再采集一轮，对比两轮审核 | 再跑一次 `collect` |
 
@@ -124,7 +159,7 @@ flowchart LR
 | 文本提示词 `.md` / `.txt` | `--mode marker`（默认），维护唯一的 `<!-- deai:begin … --> … <!-- deai:end -->` 块 |
 | JSON 配置字段 | `--mode json-path --json-path persona.roleText`，只改该字段 |
 | skill 目录 | 直接复制整个目录为 `deai-dialogue` |
-| 整份替换 | `--mode replace --force`，仅用户明确要求时 |
+| 整份替换 | `--mode replace --force`，**会丢弃目标原有设定**，仅用户明确要求时 |
 
 写入前自动备份到 `backups/`，记录在 `install-state.json`，回滚：`python scripts/deai.py rollback --target <文件>`。
 
@@ -134,15 +169,24 @@ flowchart LR
 
 仓库包含 100 题，十类各十题，覆盖日常接话、情绪、纠错、技术求助、工具回执、身份归属、格式要求、参与边界和连续会话。审核考点（`focus`）不会送入被测模型。
 
-已用配置的 `deepseek-chat` 加载本包表达规则，实际采集 **100/100**。**全部待人工审核**，没有人工评分或通过结论。这是隔离模型测试，未接入生产 QQ 的完整角色、真实工具或发送链路。
+**仓库里没有回答样本。** 同一个问题在不同人设、不同模型下的输出差别很大，拿别人的回答当基准没有意义。所以先在你自己的目标上采集：
 
-在本地浏览器打开 [人工审核.html](人工审核.html)（GitHub 预览不会运行页面）。逐条选择原句通过 / 人工纠正 / 拒绝，填写评分、原因、适用范围，由**实际审核人**导出 `human-review.json`。
+```sh
+# 1. 装配并导出完整提示
+python scripts/deai.py install --target <提示文件> --emit compiled/system-prompt.txt
+# 2. 用这份提示向目标提一百问
+python scripts/deai.py collect --system-file compiled/system-prompt.txt
+```
+
+采集完成后会生成 `runs/<时间>/人工审核.html`。在本地浏览器打开（GitHub 预览不会运行页面），逐条选择原句通过 / 人工纠正 / 拒绝，填写评分、原因、适用范围，由**实际审核人**导出 `human-review.json`。
+
+只想先看题：打开 [100问预览.html](100问预览.html)，或用 `python scripts/deai.py template` 重新生成。它只含问题，未采集时无法导出审核结果。
 
 需要 Python 3.10+，采集和编译只用标准库：
 
 ```sh
 python scripts/deai.py verify
-python scripts/deai.py apply --run runs/20261025-134704-d943f7 --review human-review.json --out compiled/v1 --target <提示文件>
+python scripts/deai.py apply --run runs/<你的运行目录> --review human-review.json --out compiled/v1 --target <提示文件>
 ```
 
 重新采集时通过终端环境变量提供接口，密钥不落盘：
@@ -164,8 +208,9 @@ python scripts/deai.py collect
 | [scripts/probe.py](scripts/probe.py) | 本机 bot/AI 探测，输出候选与待问询清单 |
 | [scripts/deai.py](scripts/deai.py) | 采集、导入、审核页、编译、装配、回填、状态 |
 | [config/style.json](config/style.json) | 表达偏好、采集参数、审核门槛 |
-| [evaluation/questions.jsonl](evaluation/questions.jsonl) | 100 题及审核考点 |
-| [runs/20261025-134704-d943f7](runs/20261025-134704-d943f7) | 本轮真实输出、上下文、重试记录和哈希 |
+| [evaluation/questions.jsonl](evaluation/questions.jsonl) | 100 题及审核考点，唯一随包发布的评测输入 |
+| [100问预览.html](100问预览.html) / [evaluation/100问.md](evaluation/100问.md) | 只含问题的题单页与可读清单，不能导出审核 |
+| `runs/`（本机生成） | 你自己的采集回答、上下文与审核页；已在 `.gitignore` 中，不随包分发 |
 | [runtime/quality.mjs](runtime/quality.mjs) | 可选纯观察器，默认不删句、不拦截 |
 | [references](references) | 接入、装配回填、人工审核、来源与验证 |
 | [一致性对照](references/一致性对照.md) | 与原 bot 版本的逐层对照、哈希实测与复刻条件 |

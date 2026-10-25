@@ -167,6 +167,50 @@ def refresh(run):
     return summary
 
 
+TEMPLATE_BANNER = (
+    '<div style="margin:0 0 22px;padding:14px 18px;border:1px solid #5b6b3d;border-radius:10px;'
+    'background:#1d2417;color:#d8e7bf;font-size:14px;line-height:1.7">'
+    '<b>这是题单预览，不是审核页。</b><br>本页只包含一百个问题与考点，不含任何已采集回答。'
+    '要评估表达，请先在你的目标 bot/AI 上用 <code>deai.py collect</code> 采集，再用 '
+    '<code>deai.py review --run …</code> 生成可审核的页面。未采集时本页也无法导出审核结果。'
+    '</div>'
+)
+
+
+def review_template(out_html=None, out_md=None):
+    """Render a question-only page and list: no answers, no author run data."""
+    questions = read_jsonl(ROOT / "evaluation/questions.jsonl")
+    validate_questions(questions)
+    records = [{**q, "status": "pending", "action": None, "answer": "", "raw_response": "",
+                "history": [], "attempts": [], "answer_sha256": None} for q in questions]
+    meta = {
+        "schema_version": 1, "template": True, "run_id": "question-preview",
+        "created_at": now(), "questions_sha256": digest(questions), "prompt_sha256": "not-collected",
+        "notice": "只含问题；回答需在目标环境自行采集。",
+    }
+    html_path = Path(out_html).expanduser().resolve() if out_html else ROOT / "100问预览.html"
+    data = json.dumps({"manifest": meta, "records": records}, ensure_ascii=False)
+    data = data.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
+    rendered = (ROOT / "assets/reviewer.html").read_text(encoding="utf-8").replace("__RUN_DATA__", data)
+    rendered = rendered.replace("<body>", "<body>" + TEMPLATE_BANNER, 1)
+    rendered = rendered.replace("<title>100 问 · 人工审核</title>", "<title>100 问 · 题单预览（不含回答）</title>")
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+    html_path.write_text(rendered, encoding="utf-8", newline="\n")
+    md_path = Path(out_md).expanduser().resolve() if out_md else ROOT / "evaluation/100问.md"
+    lines = ["# 一百问题单", "", "本文件只有问题，不含任何模型的回答。",
+             "考点只供人阅读与审核参考，不会随提问发送给模型。", ""]
+    category = None
+    for q in questions:
+        if q["category"] != category:
+            category = q["category"]
+            lines += ["## " + category, ""]
+        lines += ["### " + q["id"], "", "**输入**", "", q["input"], "", "**考点**", "", q["focus"], ""]
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
+    return {"html": html_path.as_posix(), "md": md_path.as_posix(),
+            "questions": len(questions), "answers_included": False}
+
+
 def connection(qq_config=None):
     if qq_config:
         cfg = read_json(qq_config)
@@ -579,6 +623,7 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
     original = target.read_text(encoding="utf-8-sig")
     block = marker_block(body, label)
     emitted, effective_mode = None, mode
+    preserved_chars = len(original)
     if json_path or (suffix in {".json", ".jsonc"} and mode in {"marker", "json-path"}):
         if not json_path:
             raise ValueError("JSON 目标必须指定 --json-path，例如 persona.roleText。")
@@ -593,6 +638,7 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
         set_path(data, json_path, emitted)
         rendered = json.dumps(data, ensure_ascii=False, indent=detect_indent(original)) + "\n"
         effective_mode = "json-path"
+        preserved_chars = len(current)
     elif mode == "marker":
         rendered = emitted = insert_marker(original, block)
     elif mode == "append":
@@ -601,6 +647,7 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
         if not force:
             raise ValueError("replace 会整份替换目标提示词，必须加 --force。")
         rendered = emitted = block + "\n"
+        preserved_chars = 0
     else:
         raise ValueError("未知写入模式：" + mode)
     assert_no_secrets(rendered, "写入结果")
@@ -608,7 +655,13 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
         "target": target.as_posix(), "mode": effective_mode, "label": label, "dry_run": dry_run,
         "changed": rendered != original, "express_sha256": digest(body),
         "target_sha256_before": digest(original), "target_sha256_after": digest(rendered),
+        "original_chars": len(original), "preserved_original_chars": preserved_chars,
+        "persona_policy": "replace-all" if effective_mode == "replace" else "preserve-existing",
+        "persona_note": ("整份替换目标提示词，原有设定不再保留。" if effective_mode == "replace"
+                         else "原有设定原样保留，表达层只作为追加块写入。"),
     }
+    if effective_mode == "replace":
+        result["warning"] = "replace 模式会丢弃目标原有全部设定；除非用户明确要求，应使用 marker 或 json-path。"
     if dry_run:
         result["note"] = "dry-run：未写入磁盘。"
     elif rendered == original:
@@ -716,6 +769,9 @@ def main():
     imp.add_argument("--file", required=True)
     render = subs.add_parser("review", help="重新生成离线人工审核页，不更改原始回答")
     render.add_argument("--run", required=True)
+    tpl = subs.add_parser("template", help="只从题库生成题单预览页与可读清单，不含任何回答")
+    tpl.add_argument("--html", help="输出 HTML，默认 100问预览.html")
+    tpl.add_argument("--md", help="输出 Markdown，默认 evaluation/100问.md")
     compile_parser = subs.add_parser("compile", help="校验人工审核，编译可回填的表达层")
     compile_parser.add_argument("--run", required=True)
     compile_parser.add_argument("--review", required=True)
@@ -768,6 +824,8 @@ def main():
         print(json.dumps(import_answers(Path(args.run).resolve(), args.file), ensure_ascii=False))
     elif args.command == "review":
         print(json.dumps(refresh(Path(args.run).resolve()), ensure_ascii=False))
+    elif args.command == "template":
+        print(json.dumps(review_template(args.html, args.md), ensure_ascii=False))
     elif args.command == "compile":
         print(json.dumps(compile_review(Path(args.run).resolve(), args.review, args.out, args.partial), ensure_ascii=False))
     elif args.command == "verify":

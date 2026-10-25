@@ -4,6 +4,7 @@ import copy
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -322,6 +323,37 @@ class ApplyAndStatusTest(unittest.TestCase):
             deai.save_record(self.run, {"id": q["id"], "status": "ok", "action": "reply", "answer": "原始测试句",
                                         "raw_response": '{"action":"reply","text":"原始测试句"}',
                                         "history": [], "attempts": []})
+
+    def test_install_reports_persona_preserved(self):
+        target = self.base / "persona.md"
+        original = "原有人设：冷淡、话少，不主动找话题。\n"
+        target.write_text(original, encoding="utf-8")
+        result = deai.install_expression(target, label="v1")
+        self.assertEqual(result["persona_policy"], "preserve-existing")
+        self.assertEqual(result["preserved_original_chars"], len(original))
+        self.assertIn("原有人设：冷淡、话少", target.read_text(encoding="utf-8"))
+        legacy = self.base / "legacy.md"
+        legacy.write_text("旧设定\n", encoding="utf-8")
+        replaced = deai.install_expression(legacy, mode="replace", force=True, label="v1")
+        self.assertEqual(replaced["persona_policy"], "replace-all")
+        self.assertEqual(replaced["preserved_original_chars"], 0)
+        self.assertIn("warning", replaced)
+
+    def test_template_contains_questions_but_no_answers(self):
+        html = self.base / "preview.html"
+        md = self.base / "questions.md"
+        result = deai.review_template(html.as_posix(), md.as_posix())
+        self.assertEqual(result["questions"], 100)
+        self.assertFalse(result["answers_included"])
+        text = html.read_text(encoding="utf-8")
+        self.assertIn("这是题单预览", text)
+        payload = re.search(r'<script id="run-data" type="application/json">(.*?)</script>', text, re.S)
+        data = json.loads(payload.group(1))
+        self.assertEqual(len(data["records"]), 100)
+        self.assertTrue(all(r["answer"] == "" and r["status"] == "pending" for r in data["records"]))
+        body = md.read_text(encoding="utf-8")
+        self.assertIn("在吗？", body)
+        self.assertIn("不含任何模型的回答", body)
 
     def test_apply_compiles_then_writes_target(self):
         self.populate()

@@ -22,6 +22,11 @@ backups/
 install-state.json
 *.bak
 
-# Keep the explicitly published synthetic evaluation run only.
-runs/*
-!runs/20261025-134704-d943f7/
+# 本机采集的回答、观测与审核导出不随包分发（只发布问题）。
+# runs/ 里是特定模型 + 特定人设下的回答，既不能代表你的 bot，
+# 也不能用来替你判断表达好坏。请在目标环境里自己采集。
+runs/
+!runs/.gitkeep
+# 采集后自动写到根目录的方便入口，同样含回答，禁止提交。
+人工审核.html
+最新运行.json

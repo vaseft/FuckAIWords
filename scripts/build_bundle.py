@@ -31,7 +31,8 @@ def write(path, data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", help="Optional read-only verification of the seven known source files")
-    parser.add_argument("--include-runs", action="store_true", help="Include synthetic test inputs and collected bot replies in the ZIP")
+    parser.add_argument("--include-runs", action="store_true",
+                        help="仅作者本地用：把 runs/ 里已采集的回答与审核页一并打包。默认不打包，发布物只含问题。")
     args = parser.parse_args()
     evidence = []
     for source, snapshot in SOURCE_MAP.items():
@@ -45,12 +46,13 @@ def main():
         evidence.append({"source_relative_path": source, "snapshot": "evidence/source/" + snapshot, "sha256": sha(path), "symbols": symbols})
     write(ROOT / "evidence/source-map.json", {"source": "QQ-agent local working tree", "extracted_on": "2026-10-25", "files": evidence})
     dirs = ("scripts", "prompts", "config", "evaluation", "runtime", "references", "assets", "evidence")
-    top = ("AGENT.md", "AGENTS.md", "SKILL.md", "开始使用.md", "README.md", "ATTRIBUTION.md", ".gitignore")
+    top = ("AGENT.md", "AGENTS.md", "SKILL.md", "开始使用.md", "README.md", "ATTRIBUTION.md",
+           "100问预览.html", ".gitignore")
     static = [ROOT / name for name in top if (ROOT / name).exists()]
     for directory in dirs:
         static.extend(p for p in (ROOT / directory).rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
     static = sorted(set(static))
-    write(ROOT / "bundle-manifest.json", {"schema_version": 1, "created_at": dt.datetime.now(dt.timezone.utc).isoformat(), "files": [{"path": p.relative_to(ROOT).as_posix(), "sha256": sha(p)} for p in static], "mutable_evidence": "runs are checked by each run's hashes; browser review copies are not static source"})
+    write(ROOT / "bundle-manifest.json", {"schema_version": 1, "created_at": dt.datetime.now(dt.timezone.utc).isoformat(), "files": [{"path": p.relative_to(ROOT).as_posix(), "sha256": sha(p)} for p in static], "answers_published": False, "mutable_evidence": "仓库只发布问题，不发布任何已采集回答；本机 runs/ 仅在存在时由 verify 按各运行哈希核对"})
     files = static + [ROOT / "bundle-manifest.json"]
     if args.include_runs:
         files += [ROOT / name for name in ("人工审核.html", "最新运行.json") if (ROOT / name).exists()]
