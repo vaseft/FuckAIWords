@@ -47,7 +47,7 @@ def main():
     write(ROOT / "evidence/source-map.json", {"source": "QQ-agent local working tree", "extracted_on": "2026-10-25", "files": evidence})
     dirs = ("scripts", "prompts", "config", "evaluation", "runtime", "references", "assets", "evidence")
     top = ("AGENT.md", "AGENTS.md", "SKILL.md", "开始使用.md", "README.md", "ATTRIBUTION.md",
-           "100问预览.html", ".gitignore")
+           "特别说明.md", "100问预览.html", ".gitignore")
     static = [ROOT / name for name in top if (ROOT / name).exists()]
     for directory in dirs:
         static.extend(p for p in (ROOT / directory).rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
