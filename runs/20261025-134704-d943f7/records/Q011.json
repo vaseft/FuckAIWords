@@ -1,0 +1,22 @@
+{
+  "id": "Q011",
+  "status": "ok",
+  "action": "reply",
+  "answer": "被当众批评确实很难受。你想说说当时发生了什么吗？不想说也行，我就在这儿。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"被当众批评确实很难受。你想说说当时发生了什么吗？不想说也行，我就在这儿。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:07+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.75
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 687,
+    "completion_tokens": 30,
+    "total_tokens": 717
+  },
+  "collected_at": "2026-10-25T05:47:08+00:00",
+  "answer_sha256": "23298a8b0ddfd55cab99d9a4dd8d420a4e97b15b16b7bf3a6142c2955b3c6a96"
+}

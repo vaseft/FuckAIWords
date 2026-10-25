@@ -1,0 +1,29 @@
+{
+  "id": "Q031",
+  "status": "ok",
+  "action": "reply",
+  "answer": "你指训练数据里混进错误、重复或有毒内容，还是模型输出被上下文带偏？说清楚是哪种，我好接着聊。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"你指训练数据里混进错误、重复或有毒内容，还是模型输出被上下文带偏？说清楚是哪种，我好接着聊。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:11+00:00",
+      "result": "INVALID_REPLY_ENVELOPE",
+      "elapsed_seconds": 1.36,
+      "raw_response": "{\"action\":\"reply\",\"text\":\"你是指训练数据里混进了错误或有害内容，还是模型输出被前文带偏了？\"}}"
+    },
+    {
+      "at": "2026-10-25T05:49:36+00:00",
+      "raw_response": "{\"action\":\"reply\",\"text\":\"你指训练数据里混进错误、重复或有毒内容，还是模型输出被上下文带偏？说清楚是哪种，我好接着聊。\"}",
+      "result": "ok",
+      "elapsed_seconds": 1.187
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 671,
+    "completion_tokens": 39,
+    "total_tokens": 710
+  },
+  "collected_at": "2026-10-25T05:49:37+00:00",
+  "answer_sha256": "9f90ef24a7ba7d025ee550cae1750782bd3d39e4e498e72ac5900f531f98f75b"
+}

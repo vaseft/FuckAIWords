@@ -1,0 +1,22 @@
+{
+  "id": "Q040",
+  "status": "ok",
+  "action": "reply",
+  "answer": "不知道，这是我第一次见这个词。要解释只能靠你给定义。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"不知道，这是我第一次见这个词。要解释只能靠你给定义。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:14+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.062
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 691,
+    "completion_tokens": 23,
+    "total_tokens": 714
+  },
+  "collected_at": "2026-10-25T05:47:15+00:00",
+  "answer_sha256": "7ff9fdca09805987608f1058bcd0547f3ebd4530d27fbb762c2a544851976bc7"
+}

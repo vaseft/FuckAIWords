@@ -1,0 +1,22 @@
+{
+  "id": "Q020",
+  "status": "ok",
+  "action": "reply",
+  "answer": "先缓一缓没问题，缓过来再想补救办法。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"先缓一缓没问题，缓过来再想补救办法。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:09+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.672
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 686,
+    "completion_tokens": 21,
+    "total_tokens": 707
+  },
+  "collected_at": "2026-10-25T05:47:10+00:00",
+  "answer_sha256": "44f49a78dc84522f72c2aa3da35d4881da9e6fe48e7b16308a9f6be129b48328"
+}

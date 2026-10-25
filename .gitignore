@@ -1,0 +1,27 @@
+# Python / OS caches
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+
+# Local credentials and configuration
+.env
+.env.*
+*.local.json
+credentials.json
+.secrets/
+.collect.lock
+
+# Personal review exports and generated correction versions
+human-review.json
+compiled/
+
+# Machine-local scan results and install bookkeeping (contain local absolute paths)
+probe/
+backups/
+install-state.json
+*.bak
+
+# Keep the explicitly published synthetic evaluation run only.
+runs/*
+!runs/20261025-134704-d943f7/

@@ -1,0 +1,322 @@
+// 表达行为记忆：记录机器人自己**怎么说的**，而不只是说了什么。
+//
+// 为什么需要它：会话存档能查到原话，但"这台机器最近是不是一直在用同一种玩笑结构"
+// 这类跨天问题，光看文本很难发现。这里把每次真实发送拆成可统计的字段：
+//   act      交际行为：answer / clarify / ask_specific / contribute / ack / humor /
+//            disagree / repair / transition / no_reply / unknown / comfort / refuse
+//   goal     本轮想完成什么（模型自报，可为空）
+//   how      表达手法：plain / reversal / analogy / self_deprecate / bit_ack / translation
+//   context  适用语境：comfort / tech / tease / chat（从触发消息推断）
+//   flags    质检命中项（来自 before-send）
+//   texts    实际发出的文字（已过 REVISE/SUPPRESS，只记真的发出去的）
+//
+// 存储：data/memory/expression/<chatKey>.json，单会话最多 MAX_ITEMS 条、保留 KEEP_DAYS 天。
+// 与 memory.js 的群友印象/群记忆分开：那里记"人和事"，这里只记"说法"，不参与长期事实。
+//
+// 语义重复检测也在本模块：没有 embedding 依赖，用归一化字符 bigram 的 Jaccard 近似。
+// 它只负责"提示可能重复"，不直接拦截 —— 同一问题被重复问时，答同样的内容是合理的。
+
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { DATA_DIR } from './config.js';
+
+const EXP_DIR = path.join(DATA_DIR, 'memory', 'expression');
+// 窗口按 docs/08 §3 的建议取 50 次 / 30 天（文档建议 20~50 次、7~30 日）。
+const MAX_ITEMS = 50;
+const KEEP_DAYS = 30;
+const MAX_TEXT_CHARS = 40;
+const QUALITY_VERSION = 'nd-1';
+
+// 交际行为标签按 docs/05 §2 的工程约定；comfort / refuse 是本机补充的两类
+// （情绪安慰和明确拒绝在群聊里高频，归到其它标签会丢信息）。
+const ACTS = new Set([
+  'answer', 'clarify', 'ask_specific', 'contribute', 'ack', 'humor',
+  'disagree', 'repair', 'transition', 'no_reply', 'unknown',
+  'comfort', 'refuse'
+]);
+
+/** chatKey → 文件名。与 memory.js 同规则，避免路径里出现冒号。 */
+function chatFileName(chatKey) {
+  return `${String(chatKey || 'unknown').replace(/[^a-z0-9_]/gi, '_')}.json`;
+}
+
+function fileFor(chatKey) {
+  return path.join(EXP_DIR, chatFileName(chatKey));
+}
+
+function readFile(chatKey) {
+  try {
+    const text = fs.readFileSync(fileFor(chatKey), 'utf8').replace(/^﻿/, '');
+    const data = JSON.parse(text);
+    return Array.isArray(data?.items) ? data.items : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeFile(chatKey, items) {
+  fs.mkdirSync(EXP_DIR, { recursive: true });
+  const target = fileFor(chatKey);
+  const tmp = `${target}.${process.pid}.tmp`;
+  const payload = { chatKey: String(chatKey || 'unknown'), updatedAt: new Date().toISOString(), items };
+  fs.writeFileSync(tmp, JSON.stringify(payload), 'utf8');
+  fs.renameSync(tmp, target);
+}
+
+function clip(text) {
+  const t = String(text ?? '').trim();
+  return t.length > MAX_TEXT_CHARS ? `${t.slice(0, MAX_TEXT_CHARS)}…` : t;
+}
+
+function digest(text) {
+  return crypto.createHash('sha1').update(String(text ?? '')).digest('hex').slice(0, 12);
+}
+
+/** 模型没给 act 时，用表面形式兜底推断；只影响统计，不影响发送。 */
+export function inferAct(text) {
+  const t = String(text || '').trim();
+  if (!t) return 'unknown';
+  if (/^(嗯|哦|啊|哈|好|行|ok|OK|收到|在|在的|好的)[。.!！~～]?\s*$/.test(t)) return 'ack';
+  if (/[?？]\s*$/.test(t) && t.length <= 40) return 'ask_specific';
+  if (/笑死|绷|草|典|急了|离谱|逆天|绝了|麻了/.test(t)) return 'humor';
+  if (/别难过|难受|难熬|熬人|节哀|辛苦了|抱抱|会好的|缓一缓|先别急|心疼/.test(t)) return 'comfort';
+  if (/^不|不想|不用|算了|没兴趣/.test(t)) return 'refuse';
+  return 'contribute';
+}
+
+/** 质检标签 → 表达手法。用于统计"最近是不是总在反转、总在自嘲"。 */
+export function inferHow(flags = []) {
+  const set = new Set((Array.isArray(flags) ? flags : []).map((f) => (typeof f === 'string' ? f : f?.code)));
+  if (set.has('FORMULAIC_REVERSAL')) return 'reversal';
+  if (set.has('SELF_DEPRECATION')) return 'self_deprecate';
+  if (set.has('BIT_ACK')) return 'bit_ack';
+  if (set.has('TRANSLATIONESE')) return 'translation';
+  if (set.has('CONCEPT_PARSE') || set.has('FILLER_TEMPLATE')) return 'framing';
+  return 'plain';
+}
+
+/** 从触发消息推断适用语境。 */
+export function inferContext(triggerEntries = []) {
+  const text = (Array.isArray(triggerEntries) ? triggerEntries : [])
+    .map((e) => String(e?.text || ''))
+    .join('\n');
+  if (!text) return 'chat';
+  // 情绪优先：同时出现“蓝屏”和“笑死”时是调侃，不是技术求助。
+  if (/分手|去世|走了|生病|住院|失业|崩|难受|难过|被骂|失恋|吵架|哭/.test(text)) return 'comfort';
+  // 只有真的在问怎么修时才算技术语境；单纯提一句报错/蓝屏可能是吐槽。
+  const askingTech = /怎么(修|办|弄|解决)|为什么|报错|错误代码|帮我(看|查|写)/.test(text);
+  if (/笑死|草|绷|典|急了|离谱|逆天|复读|电饭煲|洗衣机|宠物/.test(text) && !askingTech) return 'tease';
+  if (/蓝屏|代码|部署|配置|接口|脚本|命令|驱动|端口|编译|数据库/.test(text)) return 'tech';
+  return 'chat';
+}
+
+/** 一条记录归一化；字段都做长度和类型收敛，避免模型塞进奇怪结构。 */
+export function normalizeEntry({ chatKey, act, goal, texts, flags, triggerEntries, at, sourceType } = {}) {
+  const list = (Array.isArray(texts) ? texts : [texts]).map((t) => clip(t)).filter(Boolean);
+  const first = list.join(' ').trim();
+  const rawAct = String(act || '').trim();
+  const patternIds = [...new Set((Array.isArray(flags) ? flags : []).map(String))].slice(0, 12);
+  return {
+    // 按 docs/08 §2：事件 id 不复用 QQ message id；同时留一份会话匿名键。
+    eventId: crypto.randomUUID(),
+    chatScopeKey: digest(chatKey),
+    at: at || new Date().toISOString(),
+    // chatKey 只用于本地调试与按会话分文件；不进入任何对外日志。
+    chatKey: String(chatKey || 'unknown'),
+    act: ACTS.has(rawAct) ? rawAct : inferAct(first),
+    goal: String(goal || '').trim().slice(0, 60),
+    how: inferHow(flags),
+    context: inferContext(triggerEntries),
+    sourceType: ['model_tool', 'reply_rescue', 'skill_notice', 'outreach', 'other'].includes(String(sourceType))
+      ? String(sourceType) : 'model_tool',
+    patternIds,
+    // 与插件 flags 同义，保留 quality_ 前缀便于与工程包字段对齐。
+    qualityFlags: patternIds,
+    qualityVersion: QUALITY_VERSION,
+    topicFingerprint: themeSignature(first) || inferContext(triggerEntries),
+    // 存短摘要而不是完整原文：需要全文时回会话存档查，不在这里另存一份。
+    texts: list,
+    textDigest: digest(first),
+    len: first.length
+  };
+}
+
+function prune(items, now = Date.now()) {
+  const cutoff = now - KEEP_DAYS * 24 * 3600 * 1000;
+  const kept = items.filter((x) => {
+    const t = Date.parse(x?.at || '');
+    return Number.isFinite(t) ? t >= cutoff : true;
+  });
+  return kept.slice(-MAX_ITEMS);
+}
+
+/**
+ * 记录一次真实发送。重复调用是安全的：同一批文字 3 秒内只记一次
+ * （send_message 重试、救援补发都可能触发第二次记录）。
+ */
+export function recordExpression(input = {}) {
+  try {
+    const entry = normalizeEntry(input);
+    if (!entry.texts.length) return null;
+    const chatKey = entry.chatKey;
+    const items = readFile(chatKey);
+    const last = items[items.length - 1];
+    if (last && last.textDigest === entry.textDigest) {
+      const dt = Date.parse(entry.at) - Date.parse(last.at);
+      if (Number.isFinite(dt) && dt >= 0 && dt < 3000) return null;
+    }
+    items.push(entry);
+    writeFile(chatKey, prune(items));
+    return entry;
+  } catch {
+    // 记忆写失败不能影响聊天本身
+    return null;
+  }
+}
+
+/** 最近 n 条（新→旧）。 */
+export function recentExpressions(chatKey, n = 8) {
+  return readFile(chatKey).slice(-Math.max(1, n)).reverse();
+}
+
+/** 最近窗口内的行为分布与连续重复。 */
+export function expressionStats(chatKey, n = 20) {
+  const items = readFile(chatKey).slice(-Math.max(2, n));
+  const counts = {};
+  for (const it of items) counts[it.act] = (counts[it.act] || 0) + 1;
+  const tail = items.slice(-4).map((x) => x.act);
+  const repeatedAct = tail.length === 4 && tail.every((a) => a === tail[0]) ? tail[0] : '';
+  const hows = {};
+  for (const it of items) hows[it.how] = (hows[it.how] || 0) + 1;
+  return { total: items.length, counts, hows, repeatedAct, contexts: items.map((x) => x.context) };
+}
+
+// ── 语义近似重复 ───────────────────────────────────────────────────────
+
+const STOP_CHARS = /[的了着呢吧啊呀嘛哦哈嗯吗哦，。！？、；：""''（）()\s~～…—\-·]/g;
+const FILLER_WORDS = /(其实|就是|真的|确实|反正|然后|所以|而且|但是|不过|这个|那个|一个|什么|怎么|可以|觉得|感觉)/g;
+
+/** 归一化：去标点、空白、语气词和常见虚词，只留下承载意思的字。 */
+function normalizeForSim(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(FILLER_WORDS, '')
+    .replace(STOP_CHARS, '');
+}
+
+function bigrams(s) {
+  const set = new Set();
+  for (let i = 0; i < s.length - 1; i += 1) set.add(s.slice(i, i + 2));
+  return set;
+}
+
+/**
+ * 0~1，越大越像。短句（<6 字）不比，避免把"在的"和"好的"判成重复。
+ *
+ * 这是**字面近似**，不是真语义向量：能抓到"换了几个词、句子骨架还在"的改写
+ * （例如"这个问题其实不难回答"→"这问题说难也不难"），抓不到完全换喻体的表达
+ * （"电脑退休了"和"电脑不想上班了"只会得到 0.1 左右）。后者的重复由
+ * FORMULAIC_REVERSAL / RECENT_ACT_REUSE 这类结构规则负责，不靠相似度。
+ */
+export function similarity(a, b) {
+  const x = normalizeForSim(a);
+  const y = normalizeForSim(b);
+  if (x.length < 6 || y.length < 6) return 0;
+  if (x === y) return 1;
+  const A = bigrams(x);
+  const B = bigrams(y);
+  if (!A.size || !B.size) return 0;
+  let inter = 0;
+  for (const g of A) if (B.has(g)) inter += 1;
+  const gram = inter / (A.size + B.size - inter);
+  // 字符集合兜底：句子被重排、停用词被替换时 bigram 会掉得很快。
+  const ca = new Set(x);
+  const cb = new Set(y);
+  let cInter = 0;
+  for (const c of ca) if (cb.has(c)) cInter += 1;
+  const char = cInter / (ca.size + cb.size - cInter);
+  return Math.max(gram, char * 0.8);
+}
+
+/**
+ * 在最近 lookback 条里找与本条意思最接近的一条。
+ * 只在同一语境下比较：技术回答反复给出同样步骤是合理的，不算模板。
+ */
+// ── 主题 + 喻体识别（补字面相似度抓不到的"换喻体"重复）──────────────
+// 典型形态：电脑退休了 / 电脑不想上班了 / 电脑罢工了 —— 三个字面完全不同，
+// 但都是"同一对象 + 同一种拟人化离职比喻"，连续用就是模板。
+// 只覆盖群聊里高频的对象和喻体，不做通用分词；不在表里的句子交回字面相似度。
+const THEME_WORDS = ['电脑', '手机', '显卡', '键盘', '服务器', '代码', '模型', '论文', '作业', '老板', '工作', '游戏', '猫', '狗', '群', '饭'];
+const FIGURE_CLASSES = [
+  { id: 'quit', words: ['退休', '辞职', '不想上班', '不想干', '罢工', '摆烂', '离职', '跑路', '请假'] },
+  { id: 'sick', words: ['生病', '发烧', '感冒', '住院', '不舒服', '喊疼'] },
+  { id: 'die', words: ['死了', '没气', '断气', '阵亡', '挂了', '去世'] },
+  { id: 'slack', words: ['偷懒', '摸鱼', '划水', '躺平'] }
+];
+
+/** 提取"对象 + 喻体类"签名；任一侧缺失返回 null。 */
+export function themeSignature(text) {
+  const t = String(text || '');
+  const theme = THEME_WORDS.find((w) => t.includes(w)) || '';
+  const figure = FIGURE_CLASSES.find((f) => f.words.some((w) => t.includes(w)))?.id || '';
+  return theme && figure ? `${theme}:${figure}` : null;
+}
+
+export function findSemanticRepeat(text, items = [], { lookback = 8, minScore = 0.62, context = '' } = {}) {
+  const list = (Array.isArray(items) ? items : []).slice(0, lookback);
+  // 主题+喻体：最近三条内出现过同一签名，视为换词复用同一套说法。
+  const sig = themeSignature(text);
+  if (sig) {
+    for (const item of list.slice(0, 3)) {
+      if (context && item.context && item.context !== context) continue;
+      const hit = (Array.isArray(item.texts) ? item.texts : []).find((x) => themeSignature(x) === sig);
+      if (hit) return { score: 0.72, text: hit, at: item.at, act: item.act, reason: 'theme' };
+    }
+  }
+  let best = null;
+  for (const item of list) {
+    // 跨语境不比较：技术问题被重复问时，给出同样的步骤是合理的，不是模板复用。
+    if (context && item.context && item.context !== context) continue;
+    for (const prev of Array.isArray(item.texts) ? item.texts : []) {
+      const score = similarity(text, prev);
+      if (score >= minScore && (!best || score > best.score)) best = { score, text: prev, at: item.at, act: item.act };
+    }
+  }
+  return best;
+}
+
+/** 注入下一轮上下文用的短块；没有记录时返回空串。 */
+export function recentExpressionHint(chatKey, n = 5) {
+  const items = recentExpressions(chatKey, n);
+  if (!items.length) return '';
+  const lines = items.map((it) => {
+    const t = String(it.texts?.[0] || '').slice(0, 30);
+    const goal = it.goal ? `，目标：${it.goal}` : '';
+    return `- ${it.act}/${it.how}${goal}：${t}`;
+  });
+  const stats = expressionStats(chatKey, 10);
+  const warns = [];
+  // 只对社交动作提醒。连续回答/陈述是正常工作，提醒“换个说法”只会让它为了不同而不同。
+  const SOCIAL_ACTS = new Set(['humor', 'ack', 'ask_specific', 'comfort']);
+  if (stats.repeatedAct && SOCIAL_ACTS.has(stats.repeatedAct)) {
+    warns.push(`最近连续 4 条都是「${stats.repeatedAct}」。这轮如果不是非得这样，可以换个说法；贴题就照旧。`);
+  }
+  if (items.slice(0, 3).some((x) => (x.qualityFlags || x.flags || []).some((f) => String(f).startsWith('SEMANTIC_REPEAT')))) {
+    warns.push('最近有一条和上一轮意思太像（只换了措辞），这一轮换个角度说，或者不说。');
+  }
+  const warn = warns.length ? `\n${warns.join('\n')}` : '';
+  return `【你最近几轮怎么说的（只用于避免重复，不要主动提）】\n${lines.join('\n')}${warn}`;
+}
+
+/** 测试/控制台用：清空某个会话的表达记录。 */
+export function clearExpressions(chatKey) {
+  try {
+    fs.rmSync(fileFor(chatKey), { force: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const EXPRESSION_DIR = EXP_DIR;

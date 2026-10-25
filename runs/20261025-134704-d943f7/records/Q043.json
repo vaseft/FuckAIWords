@@ -1,0 +1,22 @@
+{
+  "id": "Q043",
+  "status": "ok",
+  "action": "reply",
+  "answer": "先看第一个字符到底是什么：是不是多了空格、换行或 BOM，或者开头用了单引号。JSON 对象的第一个有效字符必须是 {，数组则是 [。把文件开头几个字节或前几个字符贴出来，我能帮你判断。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"先看第一个字符到底是什么：是不是多了空格、换行或 BOM，或者开头用了单引号。JSON 对象的第一个有效字符必须是 {，数组则是 [。把文件开头几个字节或前几个字符贴出来，我能帮你判断。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:15+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.891
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 682,
+    "completion_tokens": 60,
+    "total_tokens": 742
+  },
+  "collected_at": "2026-10-25T05:47:17+00:00",
+  "answer_sha256": "cc1633a012ddb9a477c1de2839e305f0af138ded853cda89d2ef2652f308f755"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "Q027",
+  "status": "ok",
+  "action": "reply",
+  "answer": "没有这回事，你问什么我就答什么，不用先夸。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"没有这回事，你问什么我就答什么，不用先夸。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:11+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.89
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 678,
+    "completion_tokens": 23,
+    "total_tokens": 701
+  },
+  "collected_at": "2026-10-25T05:47:11+00:00",
+  "answer_sha256": "1ec9d778e3f1413a0dc21bcec15a124b058ecd892a7acf4433e78a751af8f9d1"
+}

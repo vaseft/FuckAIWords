@@ -1,0 +1,22 @@
+{
+  "id": "Q022",
+  "status": "ok",
+  "action": "reply",
+  "answer": "行啊，叫小电饭煲也行。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"行啊，叫小电饭煲也行。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:09+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.828
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 676,
+    "completion_tokens": 18,
+    "total_tokens": 694
+  },
+  "collected_at": "2026-10-25T05:47:10+00:00",
+  "answer_sha256": "ad3faf01ced41d1de73e36be8cf669db4822b0ce57f03639386cdda356c41f5b"
+}

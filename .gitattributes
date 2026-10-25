@@ -1,0 +1,9 @@
+# Keep shell/Python entry points executable on Linux and macOS.
+* text=auto eol=lf
+*.py text eol=lf
+*.mjs text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.zip binary
+*.png binary

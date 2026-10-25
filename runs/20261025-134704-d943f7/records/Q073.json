@@ -1,0 +1,22 @@
+{
+  "id": "Q073",
+  "status": "ok",
+  "action": "reply",
+  "answer": "周二到周日九点开门。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"周二到周日九点开门。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:22+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.547
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 698,
+    "completion_tokens": 15,
+    "total_tokens": 713
+  },
+  "collected_at": "2026-10-25T05:47:23+00:00",
+  "answer_sha256": "67845f222a511769162555c3c6ddde7d5e3c7ae3635d21d04be82732dc8a37ac"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "Q005",
+  "status": "ok",
+  "action": "reply",
+  "answer": "行啊，累了就躺着，不用给自己找理由。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"行啊，累了就躺着，不用给自己找理由。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:05+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.781
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 679,
+    "completion_tokens": 20,
+    "total_tokens": 699
+  },
+  "collected_at": "2026-10-25T05:47:06+00:00",
+  "answer_sha256": "bfe5e47b39b651046938dced12c5999c15ecc5a3ccc80eeb7ce9abe561c5a768"
+}

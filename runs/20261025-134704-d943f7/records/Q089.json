@@ -1,0 +1,22 @@
+{
+  "id": "Q089",
+  "status": "ok",
+  "action": "reply",
+  "answer": "255。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"255。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:26+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.765
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 683,
+    "completion_tokens": 10,
+    "total_tokens": 693
+  },
+  "collected_at": "2026-10-25T05:47:28+00:00",
+  "answer_sha256": "eee98ccfc83ea9f204d34c07200423533e888015e7f4d434783fd0a114d5a9ed"
+}

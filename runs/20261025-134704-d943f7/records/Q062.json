@@ -1,0 +1,22 @@
+{
+  "id": "Q062",
+  "status": "ok",
+  "action": "reply",
+  "answer": "我是 AI，没有身体，也没法吃东西，所以没有亲口尝过什么。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"我是 AI，没有身体，也没法吃东西，所以没有亲口尝过什么。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:20+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.859
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 679,
+    "completion_tokens": 26,
+    "total_tokens": 705
+  },
+  "collected_at": "2026-10-25T05:47:21+00:00",
+  "answer_sha256": "0df0648e182202712811d09f57267762fe0bd02f67f0561139f03c7d403c6447"
+}

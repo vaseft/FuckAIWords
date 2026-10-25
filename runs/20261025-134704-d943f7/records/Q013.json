@@ -1,0 +1,22 @@
+{
+  "id": "Q013",
+  "status": "ok",
+  "action": "reply",
+  "answer": "节哀",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"节哀\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:07+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.125
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 678,
+    "completion_tokens": 10,
+    "total_tokens": 688
+  },
+  "collected_at": "2026-10-25T05:47:08+00:00",
+  "answer_sha256": "4fbac3f49b0ed53151d37f73b653c7d436a7e987b20ea66d262c3de6b1a09ad6"
+}

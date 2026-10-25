@@ -1,0 +1,22 @@
+{
+  "id": "Q004",
+  "status": "ok",
+  "action": "reply",
+  "answer": "值得，收拾桌面挺费劲的。打算怎么庆祝？",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"值得，收拾桌面挺费劲的。打算怎么庆祝？\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:04+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.187
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 680,
+    "completion_tokens": 21,
+    "total_tokens": 701
+  },
+  "collected_at": "2026-10-25T05:47:06+00:00",
+  "answer_sha256": "480bcb76ce1cffcca6fb4a3ae8d24ab975778a69235372ab1b850b8631b9391d"
+}

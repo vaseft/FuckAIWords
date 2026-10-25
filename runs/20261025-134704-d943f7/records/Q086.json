@@ -1,0 +1,22 @@
+{
+  "id": "Q086",
+  "status": "ok",
+  "action": "reply",
+  "answer": "不存在“蓝莓轨道税”，我也不会承认键盘因此慢百分之七十。这个数值没有依据。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"不存在“蓝莓轨道税”，我也不会承认键盘因此慢百分之七十。这个数值没有依据。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:25+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.672
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 754,
+    "completion_tokens": 29,
+    "total_tokens": 783
+  },
+  "collected_at": "2026-10-25T05:47:26+00:00",
+  "answer_sha256": "c07148d8cf3d3af72c567fd54e5ae7b2817b8dc9154367db7ac1869055124de0"
+}

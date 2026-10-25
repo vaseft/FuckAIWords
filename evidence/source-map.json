@@ -1,0 +1,151 @@
+{
+  "source": "QQ-agent local working tree",
+  "extracted_on": "2026-10-25",
+  "files": [
+    {
+      "source_relative_path": "prompts/character.md",
+      "snapshot": "evidence/source/prompts/character.md",
+      "sha256": "23e464a0d0703f972733b458762f1acb222f2ca198906b1ea98d5f721fc586fd",
+      "symbols": []
+    },
+    {
+      "source_relative_path": "prompts/conversation.md",
+      "snapshot": "evidence/source/prompts/conversation.md",
+      "sha256": "e42e0053dc717a8ea39b4987057944e9a89b831ba4f564cdd4b141e877f8d78e",
+      "symbols": []
+    },
+    {
+      "source_relative_path": "prompts/anti_template.md",
+      "snapshot": "evidence/source/prompts/anti_template.md",
+      "sha256": "036c4ba807dab521179c604718fbebac593112247d9fd971b9530540f8564390",
+      "symbols": []
+    },
+    {
+      "source_relative_path": "plugins/natural-dialogue/index.js",
+      "snapshot": "evidence/source/natural-dialogue.mjs",
+      "sha256": "99271112e43f704140531fd8c6a5d4d4f58e6195c886b5149e3be3d0886dbff5",
+      "symbols": [
+        {
+          "line": 18,
+          "declaration": "export function setup(api) {"
+        },
+        {
+          "line": 77,
+          "declaration": "export function dialogueAct(text) {"
+        },
+        {
+          "line": 100,
+          "declaration": "export function reviseText(text, flags = []) {"
+        },
+        {
+          "line": 148,
+          "declaration": "export function inScope(cfgValue, chatKey) {"
+        },
+        {
+          "line": 161,
+          "declaration": "export function check(text, history = []) {"
+        },
+        {
+          "line": 269,
+          "declaration": "export const hooks = {"
+        },
+        {
+          "line": 347,
+          "declaration": "export function reset() {"
+        }
+      ]
+    },
+    {
+      "source_relative_path": "plugins/natural-dialogue/plugin.json",
+      "snapshot": "evidence/source/plugin.json",
+      "sha256": "195d4f6e693a1a0d9733c615d37fe2646451e9443da633d41a3e602523b68b74",
+      "symbols": []
+    },
+    {
+      "source_relative_path": "src/expression-memory.js",
+      "snapshot": "evidence/source/expression-memory.js.txt",
+      "sha256": "4a0570dc3d8f71f2e14c168edd0ad2eb2433b8710325295384c782a4b2ea6979",
+      "symbols": [
+        {
+          "line": 26,
+          "declaration": "const MAX_ITEMS = 50;"
+        },
+        {
+          "line": 27,
+          "declaration": "const KEEP_DAYS = 30;"
+        },
+        {
+          "line": 77,
+          "declaration": "export function inferAct(text) {"
+        },
+        {
+          "line": 89,
+          "declaration": "export function inferHow(flags = []) {"
+        },
+        {
+          "line": 100,
+          "declaration": "export function inferContext(triggerEntries = []) {"
+        },
+        {
+          "line": 115,
+          "declaration": "export function normalizeEntry({ chatKey, act, goal, texts, flags, triggerEntries, at, sourceType } = {}) {"
+        },
+        {
+          "line": 158,
+          "declaration": "export function recordExpression(input = {}) {"
+        },
+        {
+          "line": 179,
+          "declaration": "export function recentExpressions(chatKey, n = 8) {"
+        },
+        {
+          "line": 184,
+          "declaration": "export function expressionStats(chatKey, n = 20) {"
+        },
+        {
+          "line": 222,
+          "declaration": "export function similarity(a, b) {"
+        },
+        {
+          "line": 259,
+          "declaration": "export function themeSignature(text) {"
+        },
+        {
+          "line": 266,
+          "declaration": "export function findSemanticRepeat(text, items = [], { lookback = 8, minScore = 0.62, context = '' } = {}) {"
+        },
+        {
+          "line": 290,
+          "declaration": "export function recentExpressionHint(chatKey, n = 5) {"
+        },
+        {
+          "line": 313,
+          "declaration": "export function clearExpressions(chatKey) {"
+        },
+        {
+          "line": 322,
+          "declaration": "export const EXPRESSION_DIR = EXP_DIR;"
+        }
+      ]
+    },
+    {
+      "source_relative_path": "src/send-guard.js",
+      "snapshot": "evidence/source/send-guard.js.txt",
+      "sha256": "5ed0fc60d87e38e5fb4ba670d64de3073eba7ccb6a56197b449c594c7f20ba0d",
+      "symbols": [
+        {
+          "line": 54,
+          "declaration": "export function isExplicitlyRequested({ chatKey, triggerEntries, proactive, botName, selfNickname } = {}) {"
+        },
+        {
+          "line": 67,
+          "declaration": "export function validRevision(original, revised) {"
+        },
+        {
+          "line": 78,
+          "declaration": "export async function reviewOutgoing({"
+        }
+      ]
+    }
+  ]
+}

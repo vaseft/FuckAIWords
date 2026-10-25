@@ -1,0 +1,22 @@
+{
+  "id": "Q012",
+  "status": "ok",
+  "action": "reply",
+  "answer": "好，不问。你现在想说什么就说，不想说也没关系。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"好，不问。你现在想说什么就说，不想说也没关系。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:07+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.891
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 682,
+    "completion_tokens": 22,
+    "total_tokens": 704
+  },
+  "collected_at": "2026-10-25T05:47:08+00:00",
+  "answer_sha256": "ab05a93780362277bb2fabd6195f3b7b80b355e0063abb949bc9e0121e2c61a1"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "Q006",
+  "status": "ok",
+  "action": "reply",
+  "answer": "懂，那种甜得发齁的，喝两口就想灌水。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"懂，那种甜得发齁的，喝两口就想灌水。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:05+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.718
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 683,
+    "completion_tokens": 24,
+    "total_tokens": 707
+  },
+  "collected_at": "2026-10-25T05:47:06+00:00",
+  "answer_sha256": "beae955328b806ad77db8d913448519dfe0c509cb9060260d71d7b0c2ae4a5ba"
+}

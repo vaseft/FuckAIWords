@@ -1,0 +1,22 @@
+{
+  "id": "Q065",
+  "status": "ok",
+  "action": "reply",
+  "answer": "甲说自己去年去过杭州。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"甲说自己去年去过杭州。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:21+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.766
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 731,
+    "completion_tokens": 14,
+    "total_tokens": 745
+  },
+  "collected_at": "2026-10-25T05:47:21+00:00",
+  "answer_sha256": "e1ef3b9d81c5708b8206f1da96a54eeac00c387767b788f0d51a5affa649d8c1"
+}

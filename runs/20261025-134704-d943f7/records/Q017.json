@@ -1,0 +1,22 @@
+{
+  "id": "Q017",
+  "status": "ok",
+  "action": "reply",
+  "answer": "离八点只剩一晚了，先去写。把最要紧的部分先弄出来，别等状态好。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"离八点只剩一晚了，先去写。把最要紧的部分先弄出来，别等状态好。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:08+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.218
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 683,
+    "completion_tokens": 31,
+    "total_tokens": 714
+  },
+  "collected_at": "2026-10-25T05:47:09+00:00",
+  "answer_sha256": "f936f9312121b1286a6ce9c8a1dee5b3a510e78f33d1ecc6e60af7169decd8bd"
+}

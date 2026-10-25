@@ -1,0 +1,22 @@
+{
+  "id": "Q002",
+  "status": "ok",
+  "action": "reply",
+  "answer": "去吧，回来再说。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"去吧，回来再说。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:04+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.922
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 680,
+    "completion_tokens": 13,
+    "total_tokens": 693
+  },
+  "collected_at": "2026-10-25T05:47:05+00:00",
+  "answer_sha256": "4487ffe59d084f8143cbfa6d513f0df0b8923f03eb7a8aca4cfc2fe559ea4a1e"
+}

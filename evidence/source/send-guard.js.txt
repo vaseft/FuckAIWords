@@ -1,0 +1,164 @@
+// 发送前统一闸口（P3 有限干预）
+//
+// 目标：模型生成、即将经 send_message / send_to 发出的文字，在真正进入发送队列
+// 之前有一个**唯一的**审查点。插件通过 `before-send` 钩子返回：
+//
+//   { action: 'PASS' }                         原样发送
+//   { action: 'WARN', flags: [...] }           只记录，正文不变
+//   { action: 'REVISE', messages: [...], flags } 用替换文本发送（只允许删减）
+//   { action: 'SUPPRESS', reason, flags }      不发送这一批
+//
+// 边界（与 docs/natural-dialogue/docs/09-integration-contract.md 一致）：
+//   · 插件不能改目标会话、引用、@ 或权限 —— 这些参数不进入钩子参数；
+//   · REVISE 只能缩短文本，条数不得增加，禁止借修订注入新内容；
+//   · SUPPRESS 对“明确请求”的发言一律无效（核心再校验一次，不只信插件）；
+//   · 钩子异常按 PASS 处理，不能让质检故障阻断正常聊天。
+
+import { skillManager } from './skills/manager.js';
+import { recentExpressions, findSemanticRepeat, inferContext } from './expression-memory.js';
+
+const PASS = Object.freeze({ action: 'PASS' });
+
+// ── 内置规则：附件读取失败说明（2026-10-23）──────────────────────────────
+// 用户要求：图片/表情/文件/视频读不到时，不要发「识别失败 / 看不到 / 打不开」
+// 这类解释。提示词和工具返回已经改成静默，但模型偶尔仍会复述工具错误，
+// 这里做最后一道清洗：能删句就删句，删空了整批静默。
+// 只认「读取/识别/打开/解析」这类语义，不碰「发送失败」——后者是正常反馈。
+const IMAGE_FAILURE_NOTE = /(?:(?:图片|表情|这张图|那张图|画面)(?:的)?(?:识别|读取|解析|分析|查看|加载)?(?:失败|出错|不了|不到|不支持))|(?:(?:识别|解析|读取)(?:图片|表情|这张图|图|画面)?(?:失败|出错|不了|不到))|(?:(?:暂时)?(?:看|读)不到(?:这张|那张)?(?:图|图片|表情|画面))|(?:(?:这张|那张|这|那)?(?:图|图片|表情|画面)[^。！？!?；;\n]{0,8}?(?:看不到|看不了|读不到|读取不到|识别不了|解析不了|看不出来|读不出来|识别不出来))|(?:图片解析(?:被关|已关|关闭|不可用))/;
+const FILE_VIDEO_FAILURE_NOTE = /(?:(?:文件|附件|文档|表格|压缩包|PDF|pdf|视频)(?:的)?(?:读取|打开|解析|获取|下载|加载|播放|转码)?(?:失败|出错|不了|不到|打不开|不支持))|(?:(?:文件|附件|文档|视频)[^。！？!?；;，,\n]{0,6}?(?:打不开|看不到|看不了|读不到|读取不了|解析不了|播放不了|加载不了|读不出来))|(?:(?:读取|打开|解析|下载|获取|加载|播放)(?:不了|不到|失败|出错)?[^。！？!?；;，,\n]{0,4}?(?:文件|附件|文档|视频))|(?:(?:看不到|看不了|看不成|没看到)[^。！？!?；;，,\n]{0,4}?(?:文件|附件|视频))/;
+
+const isAttachmentFailure = (text) => IMAGE_FAILURE_NOTE.test(text) || FILE_VIDEO_FAILURE_NOTE.test(text);
+
+/** 从一批待发消息里剥掉「附件读取失败」的说明。返回剩余消息与删除条数。 */
+function stripAttachmentFailureNotes(messages) {
+  const kept = [];
+  let removed = 0;
+  for (const raw of Array.isArray(messages) ? messages : []) {
+    const text = String(raw ?? '').trim();
+    if (!text) continue;
+    if (!isAttachmentFailure(text)) { kept.push(raw); continue; }
+    // 整条都是失败说明 → 丢；混着正常内容 → 按句拆掉失败分句
+    const clauses = text.split(/(?<=[。！？!?；;，,\n])/).map((s) => s.trim()).filter(Boolean);
+    const rest = clauses.filter((c) => !isAttachmentFailure(c)).join('');
+    removed += 1;
+    if (rest) kept.push(rest);
+  }
+  return { messages: kept, removed };
+}
+
+function textLen(messages) {
+  return (Array.isArray(messages) ? messages : []).reduce((n, m) => n + String(m ?? '').length, 0);
+}
+
+/** 是否属于“明确请求”：私聊、被 @、正文点名机器人。主动发言不算。 */
+export function isExplicitlyRequested({ chatKey, triggerEntries, proactive, botName, selfNickname } = {}) {
+  if (String(chatKey || '').startsWith('private:')) return true;
+  if (proactive === true) return false;
+  const names = [botName, selfNickname].map((n) => String(n || '').trim()).filter(Boolean);
+  for (const entry of Array.isArray(triggerEntries) ? triggerEntries : []) {
+    if (entry?.atMe === true) return true;
+    const text = String(entry?.text || '');
+    if (names.some((name) => text.includes(name))) return true;
+  }
+  return false;
+}
+
+/** 校验 REVISE 返回值：只能缩短、不能加条、不能塞非字符串。 */
+export function validRevision(original, revised) {
+  if (!Array.isArray(revised) || !revised.length) return false;
+  if (!Array.isArray(original) || revised.length > original.length) return false;
+  if (!revised.every((m) => typeof m === 'string' && m.trim())) return false;
+  return textLen(revised) <= textLen(original);
+}
+
+/**
+ * 审查一批即将发送的文本。
+ * @returns {Promise<{action:string, messages:string[], flags:string[], reason?:string, revised:boolean, suppressed:boolean}>}
+ */
+export async function reviewOutgoing({
+  messages, chatKey, toolName, session, triggerEntries, proactive, botName, selfNickname
+} = {}) {
+  const rawOriginal = (Array.isArray(messages) ? messages : []).map((m) => String(m ?? '')).filter((m) => m.trim());
+  if (!rawOriginal.length) return { ...PASS, messages: [], flags: [], revised: false, suppressed: false };
+
+  // 先剥掉「图片识别失败」的说明；整批都只剩这类话时静默不发。
+  const filtered = stripAttachmentFailureNotes(rawOriginal);
+  if (!filtered.messages.length) {
+    return {
+      action: 'SUPPRESS',
+      messages: [],
+      flags: ['ATTACHMENT_READ_FAILURE'],
+      reason: '附件读取失败的说明已静默',
+      revised: false,
+      suppressed: true
+    };
+  }
+  const original = filtered.messages;
+
+  // 语义重复检测：本地近似（字符 bigram），不依赖插件和 embedding。
+  // 只在同一语境比较；只记录，不改写 —— 同一问题重复问时，答同样的内容是合理的。
+  const semanticFlags = filtered.removed ? ['ATTACHMENT_READ_FAILURE'] : [];
+  try {
+    const recent = recentExpressions(chatKey, 8);
+    if (recent.length) {
+      const context = inferContext(triggerEntries);
+      for (const m of original) {
+        const hit = findSemanticRepeat(m, recent, { context });
+        if (hit) semanticFlags.push(`SEMANTIC_REPEAT:${hit.score.toFixed(2)}`);
+      }
+    }
+  } catch (error) {
+    // docs/07 §7：质检不可用时放行并留下结构化告警，不阻断聊天。
+    console.warn(`[send-guard] QUALITY_CHECK_ERROR ${error?.message || error}`);
+  }
+
+  const explicitRequest = isExplicitlyRequested({ chatKey, triggerEntries, proactive, botName, selfNickname });
+  let results = [];
+  try {
+    results = await skillManager.runHook('before-send', {
+      messages: original.slice(),
+      chatKey,
+      toolName,
+      session,
+      explicitRequest,
+      proactive: proactive === true
+    });
+  } catch (error) {
+    console.warn(`[send-guard] QUALITY_CHECK_ERROR ${error?.message || error}`);
+    return { ...PASS, messages: original, flags: semanticFlags, revised: false, suppressed: false };
+  }
+
+  const values = results.map((r) => r?.value).filter((v) => v && typeof v === 'object');
+  if (!values.length) return { ...PASS, messages: original, flags: semanticFlags, revised: false, suppressed: false };
+
+  const allFlags = [...semanticFlags, ...values.flatMap((v) => (Array.isArray(v.flags) ? v.flags : [])).map(String)];
+  if (semanticFlags.length) console.log(`[send-guard] ${semanticFlags.join(',')} chat=${chatKey}`);
+
+  // SUPPRESS：插件提出后，核心再用 explicitRequest 复核一次。
+  const suppress = values.find((v) => v.action === 'SUPPRESS');
+  if (suppress && explicitRequest === false && toolName === 'send_message') {
+    return {
+      action: 'SUPPRESS',
+      messages: original,
+      flags: allFlags,
+      reason: String(suppress.reason || '本轮没有需要补充的内容'),
+      revised: false,
+      suppressed: true
+    };
+  }
+
+  // REVISE：只接受第一个合法修订；一次审查只改一次。
+  const revise = values.find((v) => v.action === 'REVISE');
+  if (revise && validRevision(original, revise.messages)) {
+    const revised = revise.messages.map((m) => String(m));
+    return {
+      action: 'REVISE',
+      messages: revised,
+      flags: allFlags,
+      revised: true,
+      suppressed: false
+    };
+  }
+
+  return { ...PASS, messages: original, flags: allFlags, revised: false, suppressed: false };
+}

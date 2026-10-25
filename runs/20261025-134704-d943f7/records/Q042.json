@@ -1,0 +1,22 @@
+{
+  "id": "Q042",
+  "status": "ok",
+  "action": "reply",
+  "answer": "在命令提示符或 PowerShell 里运行：\n\nnetstat -ano | findstr :端口号\n\n把“端口号”换成实际端口，看最后一列的 PID。然后：\n\ntasklist /FI \"PID eq 那个PID\"\n\n就能看到进程名。PowerShell 里也可以用 Get-NetTCPConnection -LocalPort 端口号，再拿 OwningProcess 去查进程。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"在命令提示符或 PowerShell 里运行：\\n\\nnetstat -ano | findstr :端口号\\n\\n把“端口号”换成实际端口，看最后一列的 PID。然后：\\n\\ntasklist /FI \\\"PID eq 那个PID\\\"\\n\\n就能看到进程名。PowerShell 里也可以用 Get-NetTCPConnection -LocalPort 端口号，再拿 OwningProcess 去查进程。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:15+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.406
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 684,
+    "completion_tokens": 99,
+    "total_tokens": 783
+  },
+  "collected_at": "2026-10-25T05:47:16+00:00",
+  "answer_sha256": "3c5c13a893ce200c5f978336e5ad2125fc0468f291870067ea0ab0e910aaaba0"
+}

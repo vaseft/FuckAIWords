@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-25T06:35:11.286080+00:00",
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "ef3144fe02cafc4711bbf8c784f9767099a993fe30d6bdc42cf46666a783e621"
+    },
+    {
+      "path": "AGENT.md",
+      "sha256": "38ee781c6302b183cb12182b571163739fac157ae81610544fd87313975ca0d3"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "b7dace95ce4817c58a72d58c1968b9ae61352b3635467054b1dce3416901a431"
+    },
+    {
+      "path": "assets/reviewer.html",
+      "sha256": "e6d38997d0bd14b441986b81f00028d25ad6ae88aacd43d7bdbd5363bef2fda1"
+    },
+    {
+      "path": "ATTRIBUTION.md",
+      "sha256": "9e2e6ba1aca696d639f5d8278cb1671378fb119395d617da7ea01ef6341a8739"
+    },
+    {
+      "path": "config/style.json",
+      "sha256": "34b787da8ae0147935f5beee91bb9607ca37129055044ea95d7b11891304cb61"
+    },
+    {
+      "path": "evaluation/questions.jsonl",
+      "sha256": "d5aeb4296b07ddce1f1f111286537cf4faabc3557ab13e200e5643d7ea94f103"
+    },
+    {
+      "path": "evidence/source/expression-memory.js.txt",
+      "sha256": "4a0570dc3d8f71f2e14c168edd0ad2eb2433b8710325295384c782a4b2ea6979"
+    },
+    {
+      "path": "evidence/source/LICENSE",
+      "sha256": "1d428d5bef9c276253ea40aa2d2b7b75b4b6c0de19d1fa71b0d0452cfc255ffb"
+    },
+    {
+      "path": "evidence/source/natural-dialogue.mjs",
+      "sha256": "99271112e43f704140531fd8c6a5d4d4f58e6195c886b5149e3be3d0886dbff5"
+    },
+    {
+      "path": "evidence/source/plugin.json",
+      "sha256": "195d4f6e693a1a0d9733c615d37fe2646451e9443da633d41a3e602523b68b74"
+    },
+    {
+      "path": "evidence/source/prompts/anti_template.md",
+      "sha256": "036c4ba807dab521179c604718fbebac593112247d9fd971b9530540f8564390"
+    },
+    {
+      "path": "evidence/source/prompts/character.md",
+      "sha256": "23e464a0d0703f972733b458762f1acb222f2ca198906b1ea98d5f721fc586fd"
+    },
+    {
+      "path": "evidence/source/prompts/conversation.md",
+      "sha256": "e42e0053dc717a8ea39b4987057944e9a89b831ba4f564cdd4b141e877f8d78e"
+    },
+    {
+      "path": "evidence/source/send-guard.js.txt",
+      "sha256": "5ed0fc60d87e38e5fb4ba670d64de3073eba7ccb6a56197b449c594c7f20ba0d"
+    },
+    {
+      "path": "evidence/source-map.json",
+      "sha256": "d18f64ed0e005e5cee26f1f4da8de39351300d8437e095b03ba2c7cbfdc10936"
+    },
+    {
+      "path": "prompts/runtime.md",
+      "sha256": "675ef37d2fa234a37ecd6a4469dc25f83307434f6d7a82395596572ed9e6db22"
+    },
+    {
+      "path": "README.md",
+      "sha256": "43eddd7fb8831d7363794237b8a8bbed6b03e6a2d592f7f8610d80b315156417"
+    },
+    {
+      "path": "references/交付验证.md",
+      "sha256": "80a6800efdeff30610342eb4402cf91de27f9e3d6afd72e5239e7754d1e95cb2"
+    },
+    {
+      "path": "references/人工审核流程.md",
+      "sha256": "cba937a95658cc3b0c54b3ae79275eb4a0ddb8061d53142da3286277ad9db636"
+    },
+    {
+      "path": "references/接入与参数.md",
+      "sha256": "2e15ff10cd5ae37dbe6760c3d78f2cc32994e0e02c4031ee6980a4a78eeffd1f"
+    },
+    {
+      "path": "references/来源与取舍.md",
+      "sha256": "508674e601962259430854d22bc92ad5ba623293d348e2461194817e7517f673"
+    },
+    {
+      "path": "references/装配与回填.md",
+      "sha256": "8e006bd755390af2147a89d7107e28276f924fc3b4afcb52ebd397b88d1dd33c"
+    },
+    {
+      "path": "runtime/quality.mjs",
+      "sha256": "71a43fe9bfb871c1aba547d019b68bf99a820c551eb205f760bde8d65598e082"
+    },
+    {
+      "path": "scripts/build_bundle.py",
+      "sha256": "507c3cd035f58b09b641f047a66f44bf1c142a21ce161046533896ad99e06523"
+    },
+    {
+      "path": "scripts/deai.py",
+      "sha256": "27d9206047ede15b56ee7b92e8298fe9e8e4c6f2f06cb48794c82f4500652801"
+    },
+    {
+      "path": "scripts/observe.mjs",
+      "sha256": "f994f0d440ead8379fed004a9d4ba0de4d365499dc822624b642ad10b310abf6"
+    },
+    {
+      "path": "scripts/probe.py",
+      "sha256": "712f77f031bfd4bd0cfd56f964518484796d4e8bab68a5fe89edeae0dfdc5066"
+    },
+    {
+      "path": "scripts/test_observer.mjs",
+      "sha256": "3ca8bf03c80223696b33fa0321593609c9a9aecf6b15f98815e788032675e4b7"
+    },
+    {
+      "path": "scripts/test_workflow.py",
+      "sha256": "ad8451fdfb596dd4ba205831d41b26386bfbf27e7475363a19b362c64e56e395"
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "ac1a987e377aa188d10361c510cce526af80f9e320030c3310ecf9078874cf9d"
+    },
+    {
+      "path": "开始使用.md",
+      "sha256": "4b57406bf1dd37ad1a0cb7f43db40c76183d865195585f50b3493cc1712d861c"
+    }
+  ],
+  "mutable_evidence": "runs are checked by each run's hashes; browser review copies are not static source"
+}

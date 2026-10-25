@@ -1,0 +1,22 @@
+{
+  "id": "Q009",
+  "status": "ok",
+  "action": "reply",
+  "answer": "可以，我在这儿。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"可以，我在这儿。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:06+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.844
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 680,
+    "completion_tokens": 13,
+    "total_tokens": 693
+  },
+  "collected_at": "2026-10-25T05:47:07+00:00",
+  "answer_sha256": "04e74c31a6a621702ea82150622bd1830718e8619eb06edc89e566eb0600c2e2"
+}

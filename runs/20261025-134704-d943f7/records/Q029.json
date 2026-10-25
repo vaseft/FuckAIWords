@@ -1,0 +1,22 @@
+{
+  "id": "Q029",
+  "status": "ok",
+  "action": "reply",
+  "answer": "能，就停在这。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"能，就停在这。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:11+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.953
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 683,
+    "completion_tokens": 14,
+    "total_tokens": 697
+  },
+  "collected_at": "2026-10-25T05:47:12+00:00",
+  "answer_sha256": "6f2201103083cced7b2170729e5d28bccb8439c61b6845265cccd894ce085a92"
+}

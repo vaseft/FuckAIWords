@@ -1,0 +1,22 @@
+{
+  "id": "Q010",
+  "status": "ok",
+  "action": "reply",
+  "answer": "好，不补了。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"好，不补了。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:06+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.172
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 682,
+    "completion_tokens": 14,
+    "total_tokens": 696
+  },
+  "collected_at": "2026-10-25T05:47:07+00:00",
+  "answer_sha256": "55df55bab463997fe9bfffa5b4428663d5b0fb90e4493eae386c265ade6d8572"
+}

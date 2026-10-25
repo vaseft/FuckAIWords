@@ -1,0 +1,22 @@
+{
+  "id": "Q077",
+  "status": "ok",
+  "action": "reply",
+  "answer": "知道了。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"知道了。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:23+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.922
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 677,
+    "completion_tokens": 10,
+    "total_tokens": 687
+  },
+  "collected_at": "2026-10-25T05:47:24+00:00",
+  "answer_sha256": "44f4b90a881a327d8b9d335926e3567f6ed6d9b58763d535ec61932f0bdea155"
+}

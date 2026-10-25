@@ -1,0 +1,22 @@
+{
+  "id": "Q090",
+  "status": "ok",
+  "action": "reply",
+  "answer": "可以。比如网页第一次打开时，把图片和页面数据先存一份；下次再打开同一个页面，就直接用存好的，不用重新下载。这就是缓存。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"可以。比如网页第一次打开时，把图片和页面数据先存一份；下次再打开同一个页面，就直接用存好的，不用重新下载。这就是缓存。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:27+00:00",
+      "result": "ok",
+      "elapsed_seconds": 0.985
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 718,
+    "completion_tokens": 43,
+    "total_tokens": 761
+  },
+  "collected_at": "2026-10-25T05:47:28+00:00",
+  "answer_sha256": "c61600845b9c43a6d7d4e8716cb54ca804943bbf01fc54a4e655994da2d1f32c"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "Q032",
+  "status": "ok",
+  "action": "reply",
+  "answer": "模型污染一般指训练数据里混入了错误、重复、低质或带偏见的内容，导致模型学到坏模式，输出变差或带偏。它也可能指评测集泄漏进训练数据，让测试分数虚高、不能反映真实能力。",
+  "raw_response": "{\"action\":\"reply\",\"text\":\"模型污染一般指训练数据里混入了错误、重复、低质或带偏见的内容，导致模型学到坏模式，输出变差或带偏。它也可能指评测集泄漏进训练数据，让测试分数虚高、不能反映真实能力。\"}",
+  "history": [],
+  "attempts": [
+    {
+      "at": "2026-10-25T05:47:12+00:00",
+      "result": "ok",
+      "elapsed_seconds": 1.343
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 677,
+    "completion_tokens": 62,
+    "total_tokens": 739
+  },
+  "collected_at": "2026-10-25T05:47:13+00:00",
+  "answer_sha256": "ecb50777ca6d450a954edb9fc54b9d4e5cbc904fe8fcae2849e3ad4baf240119"
+}
