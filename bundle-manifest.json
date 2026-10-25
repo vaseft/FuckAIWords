@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_at": "2026-10-25T06:35:11.286080+00:00",
+  "created_at": "2026-10-25T06:36:10.268306+00:00",
   "files": [
     {
       "path": ".gitignore",
@@ -64,7 +64,7 @@
     },
     {
       "path": "evidence/source-map.json",
-      "sha256": "d18f64ed0e005e5cee26f1f4da8de39351300d8437e095b03ba2c7cbfdc10936"
+      "sha256": "4532346f18159ae9cff1b335895ae15ec6db595bc085066536527a7656cc39f8"
     },
     {
       "path": "prompts/runtime.md",
@@ -100,11 +100,11 @@
     },
     {
       "path": "scripts/build_bundle.py",
-      "sha256": "507c3cd035f58b09b641f047a66f44bf1c142a21ce161046533896ad99e06523"
+      "sha256": "e22f4ea3efe7cb333c7da2540b888b30c10bc118b62ef059a5d44c5a78a3e9cc"
     },
     {
       "path": "scripts/deai.py",
-      "sha256": "27d9206047ede15b56ee7b92e8298fe9e8e4c6f2f06cb48794c82f4500652801"
+      "sha256": "60fad7cf7f97732517aa7dadab7b3c22d71c4dac9287063fec9e14fb49ad8b67"
     },
     {
       "path": "scripts/observe.mjs",
@@ -112,7 +112,7 @@
     },
     {
       "path": "scripts/probe.py",
-      "sha256": "712f77f031bfd4bd0cfd56f964518484796d4e8bab68a5fe89edeae0dfdc5066"
+      "sha256": "945ddda552e28e760e9db93404db625fa8dae59ebc54160d78d794d452120f4a"
     },
     {
       "path": "scripts/test_observer.mjs",

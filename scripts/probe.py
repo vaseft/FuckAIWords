@@ -494,8 +494,8 @@ def main(argv=None):
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     out = Path(args.json).resolve() if args.json else ROOT / "probe" / ("survey-" + stamp + ".json")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (out.parent / "questions-for-user.md").write_text(render_questions(result), encoding="utf-8")
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (out.parent / "questions-for-user.md").write_text(render_questions(result), encoding="utf-8", newline="\n")
     if not args.quiet:
         print(summarize(result))
         print("\nSURVEY", out)
