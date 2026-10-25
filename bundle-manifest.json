@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_at": "2026-10-25T07:22:01.213630+00:00",
+  "created_at": "2026-10-25T07:36:04.674812+00:00",
   "files": [
     {
       "path": ".gitignore",
@@ -12,11 +12,11 @@
     },
     {
       "path": "AGENT.md",
-      "sha256": "e1b8f565a7922231c9146d6e30ee7cb953540dc40dae33ec681b3be8c4132a69"
+      "sha256": "9f80a6e13162db77d2da19771f2ec5cb07851203e75690ca1f595ff1483e8f42"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "449459a20dc2cfcc5ee651406c6480d3360144807659214158fc5a4a5db927ab"
+      "sha256": "379568a4a0321720e127631bbb8b5ba0db3b4dc271c05ac0b989f79cf9d431e7"
     },
     {
       "path": "assets/reviewer.html",
@@ -80,7 +80,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "741b3527fb2718c9d6d12abed63e830e707c98025e79232054b5cbca9c19ebe8"
+      "sha256": "6d54f7b9236cdc7f0e36022d3b27e9792982ee86e45050700c009e471125f297"
     },
     {
       "path": "references/一致性对照.md",
@@ -104,7 +104,7 @@
     },
     {
       "path": "references/装配与回填.md",
-      "sha256": "81ef54634e8cec5028cf458c4fcc53310b6146208a0f2f5aec4a0acd466183d6"
+      "sha256": "ab971516027dc6e06ac656f94dfee57f72c515a775a90fdfe18a80353a09f504"
     },
     {
       "path": "runtime/quality.mjs",
@@ -116,7 +116,7 @@
     },
     {
       "path": "scripts/deai.py",
-      "sha256": "56ae672b7676805f8be71c1876c667554da413c11e4bde6704af8ecbfd004259"
+      "sha256": "a49610db83267fdaa6b27393e2ea7dad57a89ebf65c7f78616baa9210eb33f2a"
     },
     {
       "path": "scripts/observe.mjs",
@@ -132,19 +132,19 @@
     },
     {
       "path": "scripts/test_workflow.py",
-      "sha256": "2a114348ee273d8028ce2f8bb4576d5ce5756baab3d7af3fb336ab0fd816111d"
+      "sha256": "f4e5b192310f2bbe0c7747dc4e8fca7535e69c170f1b60b44c74ca4d602ed2d1"
     },
     {
       "path": "SKILL.md",
-      "sha256": "1c772a207114519342d832980de81a581091b83e7bebea05939eb2753882551b"
+      "sha256": "820989d1cec718f55a3d7909d0c809a5061f38e53570d3cc2d24f10bd0e81916"
     },
     {
       "path": "开始使用.md",
-      "sha256": "55e641b80fd9ef29ceb5c61c9b7c906e48471b8ee30d8a2fa7436cd38d363897"
+      "sha256": "850c1735400f3be423ca0686ef9ebb616cf69cf319d39bdbf4d64ae8981d6ae8"
     },
     {
       "path": "特别说明.md",
-      "sha256": "ffe2f56c7870b3238dc83a182663f53371970a0f55a48a621447e4e10ca64301"
+      "sha256": "c9568644ac761e32e419f4cbdedc9240fffb4c572f307a59b3b02d1219518833"
     }
   ],
   "answers_published": false,

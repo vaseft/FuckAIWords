@@ -69,15 +69,45 @@ python scripts/deai.py probe --root <目标项目根目录>
 
 ### 3. 装配：只加一份表达层
 
-装配前先读目标人设，回答里先写清“原有哪些设定会保留、只追加什么”。先 dry-run，把将改的文件、写入模式、块大小告诉用户：
+#### 3.0 必须先问：缓存优先还是原味优先
+
+**动任何文件之前，先让用户选位置。不许替他决定，也不许不问就写。**
+
+用你所在客户端的选择题 / 提问卡片弹出两项；没有卡片能力时，编号列出让用户回 1 或 2：
+
+| 选项 | 命令 | 收益 | 代价 |
+| --- | --- | --- | --- |
+| **原味优先**（默认） | `--position end` | 表达层放在原文之后，不打乱人设原有语序 | 若宿主在它后面拼记忆、时间、群信息，这约 700 字每轮全价重算 |
+| **缓存优先** | `--position start` | 表达层前置，实测命中量从 0 恢复到每轮 512 tokens | 表达层比人设更早出现，可能略微冲淡原有语气 |
+
+问之前先跑一次规划，把真实数字念给用户，不要空口描述：
+
+```sh
+python scripts/deai.py cache-plan --target "<目标>" --json-path persona.roleText
+```
+
+按返回值说话：
+
+- `gain_level=large`：告诉用户“不选缓存优先，每轮多花 N 字”；需要明确推荐 start。
+- `gain_level=none`：告诉用户“两种位置缓存覆盖相同，只是语序不同”；默认建议 end。
+- 用户答“随便 / 你看着办” → 用 `end`。
+- 用户答“省钱 / 在意费用 / 用量大” → 用 `start`。
+- 用户选完之后，在装配汇报里复述一次他选的是哪个、代价是什么。
+
+注意 `cache-plan` 只看得到目标文件本身。如果记忆是宿主在文件外拼接的，它会给 `gain_level=none`；这时两种位置在缓存上确实没有区别，不要为了“省 token”硬推 start。
+
+#### 3.1 写入
+
+装配前先读目标人设，回答里先写清“原有哪些设定会保留、只追加什么”。先 dry-run，把将改的文件、写入模式、写入位置、块大小告诉用户：
 
 ```sh
 python scripts/deai.py install --target "<目标提示词文件>" --dry-run
 python scripts/deai.py install --target "<目标提示词文件>" --emit "<装配后提示.txt>"
 ```
 
-- 文本提示词：默认 `--mode marker`，在文件末尾维护唯一的 `deai:begin … deai:end` 标记块。
-- JSON 配置字段：`--mode json-path --json-path persona.roleText`，只改该字段，其余字段和值保留。
+- 文本提示词：默认 `--mode marker`，维护唯一的 `deai:begin … deai:end` 标记块；`--position start` 放开头，`--position end` 放末尾。
+- JSON 配置字段：`--mode json-path --json-path persona.roleText`，只改该字段，其余字段和值保留；`--position` 同样生效。
+- 位置切换不必先回滚：脚本会认出已有标记块并搬到新位置，仍然只有一块。
 - 整份替换：`--mode replace --force`，只在用户明确要求“不用管原设定”时使用；结果会带 `warning`。
 - 回滚：`python scripts/deai.py rollback --target "<目标文件>"`。
 

@@ -537,14 +537,36 @@ def marker_block(express, label):
     return MARK_BEGIN + " label=" + label + " sha256=" + digest(body)[:12] + " -->\n" + body + "\n" + MARK_END
 
 
-def insert_marker(text, block):
-    """Maintain exactly one deai block; re-running with a new version replaces it."""
+DYNAMIC_HINT = re.compile(
+    r"(\{+|%|\$\{)[^}\n]{0,40}(memory|history|context|messages?|chat|group|time|date|clock|now|"
+    r"记忆|历史|上下文|消息|聊天|群|时间|日期)[^}\n]{0,40}(\}+|s|d)?", re.I)
+
+
+def dynamic_markers(text):
+    """Return the dynamic placeholders that sit inside a prompt template.
+
+    A placeholder means the host program injects fresh content at that point on every
+    request, so caching can only cover the bytes before the first one.
+    """
+    return sorted({m.group(0) for m in DYNAMIC_HINT.finditer(text or "")})
+
+
+def insert_marker(text, block, position="end"):
+    """Maintain exactly one deai block; re-running moves it if the position changed."""
+    if position not in {"start", "end"}:
+        raise ValueError("position 只能是 start 或 end。")
     text = text or ""
+    base = text
     if MARK_PATTERN.search(text):
-        return MARK_PATTERN.sub(lambda _m: block, text, count=1)
-    if not text.strip():
+        base = MARK_PATTERN.sub("", text, count=1)
+        base = re.sub(r"\n{3,}", "\n\n", base).strip("\n")
+        if base.strip():
+            base += "\n"
+    if not base.strip():
         return block + "\n"
-    return text.rstrip() + "\n\n" + block + "\n"
+    if position == "start":
+        return block + "\n\n" + base.lstrip("\n")
+    return base.rstrip() + "\n\n" + block + "\n"
 
 
 def get_path(data, dotted):
@@ -605,8 +627,15 @@ PROTECTED_INSTALL_DIRS = ("scripts", "prompts", "config", "evaluation", "runtime
 
 
 def install_expression(target, express=None, mode="marker", json_path=None, label="v1",
-                       dry_run=False, force=False, emit=None):
-    """Write the expression layer into a target prompt file, idempotently and reversibly."""
+                       dry_run=False, force=False, emit=None, position="end"):
+    """Write the expression layer into a target prompt file, idempotently and reversibly.
+
+    position="start" puts the layer before the target text, which keeps it ahead of any
+    content the host injects per request (memory, history, timestamps). That is the only
+    placement that lets the layer itself stay inside the cached prefix.
+    """
+    if position not in {"start", "end"}:
+        raise ValueError("position 只能是 start 或 end。")
     target = Path(target).expanduser().resolve()
     if not target.is_file():
         raise ValueError("目标文件不存在：" + str(target))
@@ -634,13 +663,13 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
         current = get_path(data, json_path)
         if not isinstance(current, str):
             raise ValueError("json-path 指向的字段不是字符串：" + str(json_path))
-        emitted = insert_marker(current, block)
+        emitted = insert_marker(current, block, position)
         set_path(data, json_path, emitted)
         rendered = json.dumps(data, ensure_ascii=False, indent=detect_indent(original)) + "\n"
         effective_mode = "json-path"
         preserved_chars = len(current)
     elif mode == "marker":
-        rendered = emitted = insert_marker(original, block)
+        rendered = emitted = insert_marker(original, block, position)
     elif mode == "append":
         rendered = emitted = original + ("" if original.endswith("\n") or not original else "\n") + "\n" + block + "\n"
     elif mode == "replace":
@@ -659,6 +688,14 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
         "persona_policy": "replace-all" if effective_mode == "replace" else "preserve-existing",
         "persona_note": ("整份替换目标提示词，原有设定不再保留。" if effective_mode == "replace"
                          else "原有设定原样保留，表达层只作为追加块写入。"),
+        "position": "start" if position == "start" and effective_mode in {"marker", "json-path"} else "end",
+        "cache_mode": ("prefix-first" if position == "start" and effective_mode in {"marker", "json-path"}
+                       else "layer-last"),
+        "cache_note": ("表达层前置，位于动态内容之前，装配块本身可进入缓存前缀；"
+                       "代价是表达层比人设更早出现，可能略微冲淡原有语气。"
+                       if position == "start" and effective_mode in {"marker", "json-path"}
+                       else "表达层追加在后；若宿主在它之后拼接记忆、时间或历史，这部分每轮都会重新计费。"),
+        "dynamic_markers": dynamic_markers(original),
     }
     if effective_mode == "replace":
         result["warning"] = "replace 模式会丢弃目标原有全部设定；除非用户明确要求，应使用 marker 或 json-path。"
@@ -684,6 +721,73 @@ def install_expression(target, express=None, mode="marker", json_path=None, labe
     return result
 
 
+def cache_plan(target, express=None, json_path=None):
+    """Compare the two placements by how many leading characters survive into the cache.
+
+    This is a static estimate: cache reuse depends on a byte-identical prefix, so the
+    only thing that matters here is where the first per-request content starts.
+    """
+    target = Path(target).expanduser().resolve()
+    if not target.is_file():
+        raise ValueError("目标文件不存在：" + str(target))
+    original = target.read_text(encoding="utf-8-sig")
+    if json_path or target.suffix.lower() in {".json", ".jsonc"}:
+        if not json_path:
+            raise ValueError("JSON 目标必须指定 --json-path，例如 persona.roleText。")
+        try:
+            data = json.loads(original)
+        except ValueError:
+            raise ValueError("目标不是合法 JSON，不能读取字段。") from None
+        text = get_path(data, json_path)
+        if not isinstance(text, str):
+            raise ValueError("json-path 指向的字段不是字符串：" + str(json_path))
+    else:
+        text = original
+    express_path = Path(express).resolve() if express else ROOT / "prompts/runtime.md"
+    layer_chars = len(express_path.read_text(encoding="utf-8-sig").strip())
+    hits = dynamic_markers(text)
+    first = min((m.start() for m in DYNAMIC_HINT.finditer(text)), default=None)
+    total = len(text) + layer_chars
+    plan = {
+        "target": target.as_posix(), "characters": total, "layer_chars": layer_chars,
+        "dynamic_markers": hits, "first_dynamic_at": first,
+        "note": ("只统计目标文件本身；宿主另外拼接的记忆、时间、历史不在本次计算内。"
+                 "缓存只认严格前缀，第一个动态内容之后的部分每轮重新计费。"),
+    }
+    if first is None:
+        # No placeholder inside the file: both placements stay entirely in the cached
+        # prefix, so the only difference is word order, not cache coverage.
+        plan["end"] = {"cached_prefix_chars": total, "cached_ratio": 1.0, "layer_cached": True,
+                       "layer_note": "文件内没有动态内容，表达层追加在后仍整段落在缓存前缀内。"}
+        plan["start"] = {"cached_prefix_chars": total, "cached_ratio": 1.0, "layer_cached": True,
+                         "layer_note": "表达层前置，整段同样命中。"}
+        plan["gain_chars"] = 0
+        plan["gain_level"] = "none"
+        plan["recommend"] = "end"
+        plan["reason"] = ("目标文件内部没有每轮变化的占位符，两种位置的缓存覆盖相同，差别只在语序。"
+                          "默认用 end：表达层放在原文之后，不打乱原有人设的起手顺序。"
+                          "若你的宿主把这份文件当作完整系统提示、并在其中插入记忆，"
+                          "请改用 start，或先确认插入点是否在表达层之前。")
+    else:
+        stable = first
+        end_chars = stable
+        start_chars = stable + layer_chars
+        plan["end"] = {"cached_prefix_chars": end_chars, "cached_ratio": round(end_chars / total, 4),
+                       "layer_cached": False,
+                       "layer_note": "原文前 " + str(stable) + " 字可命中，但表达层 " + str(layer_chars) +
+                                     " 字在缓存断点之后，每轮重算。"}
+        plan["start"] = {"cached_prefix_chars": start_chars, "cached_ratio": round(start_chars / total, 4),
+                         "layer_cached": True,
+                         "layer_note": "表达层与原文前 " + str(stable) + " 字一起命中；断点延后到第一个动态内容。"}
+        plan["gain_chars"] = layer_chars
+        plan["gain_level"] = "large"
+        plan["recommend"] = "start"
+        plan["reason"] = ("目标在第 " + str(first) + " 个字符处就注入动态内容。"
+                          "end 会把表达层放到断点之后，这 " + str(layer_chars) + " 字每轮重算；"
+                          "start 能把它拉进缓存前缀。")
+    return plan
+
+
 def rollback_install(target=None):
     state = load_install_state()
     records = state.get("records", [])
@@ -703,13 +807,13 @@ def rollback_install(target=None):
 
 
 def apply_review(run, review_path, output, target, express=None, mode="marker", json_path=None,
-                 label=None, dry_run=False, force=False, partial=False):
+                 label=None, dry_run=False, force=False, partial=False, position="end"):
     """Compile human corrections, then write the compiled layer back to the target."""
     report = compile_review(run, review_path, output, partial)
     layer = Path(output).resolve() / "runtime.md"
     installed = install_expression(
         target, express=express or layer.as_posix(), mode=mode, json_path=json_path,
-        label=label or Path(output).name, dry_run=dry_run, force=force,
+        label=label or Path(output).name, dry_run=dry_run, force=force, position=position,
     )
     return {"compiled": report, "installed": installed,
             "human_attestation": "来自审核文件，不由本脚本推断"}
@@ -785,6 +889,8 @@ def main():
     install_parser.add_argument("--target", required=True, help="目标提示词文件，例如 data/config.json")
     install_parser.add_argument("--express", help="表达层文件，默认 prompts/runtime.md")
     install_parser.add_argument("--mode", choices=["marker", "append", "replace", "json-path"], default="marker")
+    install_parser.add_argument("--position", choices=["end", "start"], default="end",
+                                help="end=表达层追加在后（原味优先）；start=表达层前置（缓存优先）")
     install_parser.add_argument("--json-path", help="JSON 目标字段，例如 persona.roleText")
     install_parser.add_argument("--label", default="v1", help="写入标记块的版本标签")
     install_parser.add_argument("--emit", help="导出装配后的完整提示文本，供 collect --system-file 使用")
@@ -798,11 +904,16 @@ def main():
     apply_parser.add_argument("--out", required=True)
     apply_parser.add_argument("--target", required=True)
     apply_parser.add_argument("--mode", choices=["marker", "append", "replace", "json-path"], default="marker")
+    apply_parser.add_argument("--position", choices=["end", "start"], default="end")
     apply_parser.add_argument("--json-path")
     apply_parser.add_argument("--label")
     apply_parser.add_argument("--dry-run", action="store_true")
     apply_parser.add_argument("--force", action="store_true")
     apply_parser.add_argument("--partial", action="store_true", help="仅吸收已审样本，标为未验收草稿")
+    cache_parser = subs.add_parser("cache-plan", help="对比两种装配位置的缓存覆盖范围，给出建议")
+    cache_parser.add_argument("--target", required=True)
+    cache_parser.add_argument("--express")
+    cache_parser.add_argument("--json-path")
     subs.add_parser("status", help="显示当前所处阶段（不推断人工审核结论）")
     args, extra = parser.parse_known_args()
     if extra and args.command != "probe":
@@ -851,14 +962,16 @@ def main():
     elif args.command == "install":
         print(json.dumps(install_expression(
             args.target, args.express, args.mode, args.json_path, args.label,
-            args.dry_run, args.force, args.emit), ensure_ascii=False))
+            args.dry_run, args.force, args.emit, args.position), ensure_ascii=False))
     elif args.command == "rollback":
         print(json.dumps(rollback_install(args.target), ensure_ascii=False))
+    elif args.command == "cache-plan":
+        print(json.dumps(cache_plan(args.target, args.express, args.json_path), ensure_ascii=False))
     elif args.command == "apply":
         print(json.dumps(apply_review(
             Path(args.run).resolve(), args.review, args.out, args.target, mode=args.mode,
             json_path=args.json_path, label=args.label, dry_run=args.dry_run,
-            force=args.force, partial=args.partial), ensure_ascii=False))
+            force=args.force, partial=args.partial, position=args.position), ensure_ascii=False))
     elif args.command == "status":
         print(json.dumps(workspace_status(), ensure_ascii=False))
     return 0

@@ -283,6 +283,55 @@ class InstallTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             deai.install_expression(deai.ROOT / "prompts/runtime.md")
 
+    def test_position_start_puts_layer_first_and_moves_on_switch(self):
+        original = self.target.read_text(encoding="utf-8")
+        result = deai.install_expression(self.target, label="v1", position="start")
+        self.assertEqual(result["position"], "start")
+        self.assertEqual(result["cache_mode"], "prefix-first")
+        text = self.target.read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("<!-- deai:begin"))
+        self.assertLess(text.index("deai:begin"), text.index("保留原有性格"))
+        self.assertIn(original.strip(), text)
+        again = deai.install_expression(self.target, label="v1", position="start")
+        self.assertFalse(again["changed"])
+        moved = deai.install_expression(self.target, label="v1", position="end")
+        self.assertTrue(moved["changed"])
+        self.assertEqual(moved["position"], "end")
+        end_text = self.target.read_text(encoding="utf-8")
+        self.assertTrue(end_text.startswith("你是测试助手"))
+        self.assertEqual(end_text.count("deai:begin"), 1)
+        self.assertIn(original.strip(), end_text)
+
+    def test_position_start_works_with_json_path(self):
+        config = self.base / "config.json"
+        deai.write_json(config, {"persona": {"roleText": "原有人设"}})
+        result = deai.install_expression(config, json_path="persona.roleText", label="v1", position="start")
+        self.assertEqual(result["cache_mode"], "prefix-first")
+        field = deai.read_json(config)["persona"]["roleText"]
+        self.assertTrue(field.startswith("<!-- deai:begin"))
+        self.assertTrue(field.rstrip().endswith("原有人设"))
+
+    def test_cache_plan_flags_early_dynamic_content(self):
+        template = self.base / "template.md"
+        template.write_text("人设一行。\n\n【记忆】\n{memory}\n", encoding="utf-8")
+        plan = deai.cache_plan(template)
+        self.assertEqual(plan["recommend"], "start")
+        self.assertEqual(plan["gain_level"], "large")
+        self.assertGreater(plan["gain_chars"], 0)
+        self.assertTrue(plan["start"]["layer_cached"])
+        self.assertFalse(plan["end"]["layer_cached"])
+        self.assertIn("{memory}", plan["dynamic_markers"])
+
+    def test_cache_plan_reports_no_gain_for_plain_persona(self):
+        plan = deai.cache_plan(self.target)
+        # No placeholder inside the file means both placements cache the same bytes.
+        self.assertEqual(plan["recommend"], "end")
+        self.assertEqual(plan["gain_level"], "none")
+        self.assertEqual(plan["gain_chars"], 0)
+        self.assertIsNone(plan["first_dynamic_at"])
+        self.assertTrue(plan["end"]["layer_cached"])
+        self.assertTrue(plan["start"]["layer_cached"])
+
     def test_json_path_preserves_other_fields_and_emits_persona(self):
         config = self.base / "config.json"
         deai.write_json(config, {"persona": {"roleText": "原有人设"}, "api": {"model": "keep-me"}})

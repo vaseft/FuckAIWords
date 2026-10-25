@@ -32,14 +32,26 @@ python scripts/deai.py probe --root <目标项目根目录>
 
 **2. 问询**：候选为 0、候选多于 1、缺提示词入口、缺模型接口、要写全局文件、要动别人项目时，**先问用户**，不要猜。问询清单直接读 `probe/questions-for-user.md`。
 
-**3. 装配（先 dry-run）**
+**3. 装配（先问位置，再 dry-run）**
+
+写文件之前必须让用户二选一，不能默认执行：
+
+| 选项 | 参数 | 收益 | 代价 |
+| --- | --- | --- | --- |
+| 原味优先 | `--position end` | 不打乱人设原有语序 | 宿主在它后面拼记忆时，表达层每轮全价 |
+| 缓存优先 | `--position start` | 实测命中量 0 → 512 tokens/轮 | 表达层更早出现，可能略微冲淡原有语气 |
+
+先跑 `cache-plan` 把数字念给用户，再按他的选择装配：
 
 ```sh
+python scripts/deai.py cache-plan --target "<目标>" --json-path persona.roleText
 python scripts/deai.py install --target "<目标提示词文件>" --dry-run
-python scripts/deai.py install --target "<目标提示词文件>" --emit "<装配后提示.txt>"
+python scripts/deai.py install --target "<目标提示词文件>" --position start --emit "<装配后提示.txt>"
 # JSON 配置里的字段：--mode json-path --json-path persona.roleText
 # 回滚：python scripts/deai.py rollback --target "<目标提示词文件>"
 ```
+
+用户答“随便”用 end；答“省钱 / 用量大”用 start；`gain_level=none` 时两种位置缓存相同，默认 end 即可。
 
 装配前先读目标原人设，并告诉用户“将保留哪些设定、只追加什么”。只维护一个 `<!-- deai:begin … --> … <!-- deai:end -->` 标记块，重复执行是幂等的；自动备份、自动回滚；拒绝改写 `.js/.py` 等代码文件。结果里的 `preserved_original_chars` 与 `persona_policy` 要如实转述。
 
