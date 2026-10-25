@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_at": "2026-10-25T06:36:10.268306+00:00",
+  "created_at": "2026-10-25T06:47:03.044436+00:00",
   "files": [
     {
       "path": ".gitignore",
@@ -72,7 +72,11 @@
     },
     {
       "path": "README.md",
-      "sha256": "43eddd7fb8831d7363794237b8a8bbed6b03e6a2d592f7f8610d80b315156417"
+      "sha256": "459d537d880bec4515abd59f1b1153c0e59f854b8fb92c891f33dd47f8b2c7b1"
+    },
+    {
+      "path": "references/一致性对照.md",
+      "sha256": "92e00e2f8d70e33ace367ca7e733bbb2f8e8f7d5cbc97d913fce6f8485074d18"
     },
     {
       "path": "references/交付验证.md",
